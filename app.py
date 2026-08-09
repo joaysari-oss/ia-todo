@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 import brain
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='interface')
 
 @app.route('/')
 def index():
