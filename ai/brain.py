@@ -35,10 +35,11 @@ def preguntar(pregunta):
         model="gemini-3.5-flash-lite",
         contents=pregunta,
         config=types.GenerateContentConfig(
-            system_instruction=INSTRUCCIONES
+            system_instruction=INSTRUCCIONES,
+            tools=[{"google_search": {}}]
         )
     )
-
+    
     return respuesta.text
 
 
