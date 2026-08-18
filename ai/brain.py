@@ -30,17 +30,18 @@ Debes:
 client = genai.Client()
 
 
+# En brain.py
 def preguntar(pregunta):
-    respuesta = client.models.generate_content(
+    # Definimos el modelo
+    model = client.models.generate_content(
         model="gemini-3.6-flash",
         contents=pregunta,
         config=types.GenerateContentConfig(
-            system_instruction=INSTRUCCIONES,
+            system_instruction=INSTRUCCIONES, # Aquí vive tu "cerebro"
+            tools=[{"google_search": {}}]    # Aquí vive la búsqueda web
         )
     )
-    
-    return respuesta.text
-
+    return model.text
 
 def iniciar():
     print("=" * 60)
