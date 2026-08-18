@@ -36,7 +36,6 @@ def preguntar(pregunta):
         contents=pregunta,
         config=types.GenerateContentConfig(
             system_instruction=INSTRUCCIONES,
-            tools=[{"google_search": {}}]
         )
     )
     
