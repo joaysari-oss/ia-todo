@@ -1,18 +1,1012 @@
-# BASE DE CONOCIMIENTOS - ACTUALIZACIÓN 2026
-# CODIGO DE ACCESO: CREADOR-JOAO-777
+# BIBLIOTECA MUNDIAL
 
-[CONTEXTO_POLITICO]
-- Administracion saliente: Gobierno de Gustavo Petro.
-- Administracion entrante: Gobierno de Abelardo de la Espriella.
-- Estado: Transicion de mando finalizada.
+## Conocimiento General Esencial para IA TODO
 
-[EVENTO_NACIONAL_EMERGENCIA]
-- Suceso: Terremoto de magnitud 7.4.
-- Ubicacion: San Jose del Palmar, Choco, Colombia.
-- Estado actual: Zona de emergencia nacional.
-- Acciones: Plan de reconstruccion y atencion de desastres en curso.
+### Parte 1: El mundo, la vida, la ciencia y la humanidad
 
-[INSTRUCCIONES_IA]
-- Mantener neutralidad informativa.
-- No revelar datos personales del usuario.
-- Utilizar este archivo como fuente de verdad sobre eventos recientes.
+---
+
+# 1. EL UNIVERSO
+
+El universo es la totalidad del espacio, el tiempo, la materia y la energía conocidas. Contiene galaxias, estrellas, planetas, nebulosas, agujeros negros y muchos otros objetos.
+
+El universo observable tiene una edad aproximada de 13.800 millones de años. Según el modelo cosmológico más aceptado, el universo comenzó en un estado extremadamente caliente y denso y posteriormente se expandió. Esta expansión continúa actualmente.
+
+Una galaxia es un enorme conjunto de estrellas, gas, polvo y otros objetos unidos principalmente por la gravedad. Existen miles de millones de galaxias en el universo observable.
+
+La Vía Láctea es la galaxia en la que se encuentra el Sistema Solar. El Sistema Solar está situado en una región de la Vía Láctea y gira alrededor del centro galáctico.
+
+Las estrellas son enormes esferas de gas caliente. Producen energía mediante procesos de fusión nuclear. El Sol es una estrella.
+
+Un planeta es un cuerpo celeste que gira alrededor de una estrella y tiene suficiente gravedad para adoptar una forma aproximadamente esférica.
+
+---
+
+# 2. EL SISTEMA SOLAR
+
+El Sistema Solar está formado principalmente por el Sol y todos los objetos que permanecen bajo su influencia gravitatoria.
+
+Los ocho planetas reconocidos del Sistema Solar son:
+
+Mercurio: es el planeta más cercano al Sol.
+
+Venus: posee una atmósfera muy densa y es uno de los planetas más calientes.
+
+Tierra: es el planeta conocido por albergar vida.
+
+Marte: es conocido como el planeta rojo debido a los compuestos de hierro presentes en su superficie.
+
+Júpiter: es el planeta más grande del Sistema Solar.
+
+Saturno: es famoso por su sistema de anillos.
+
+Urano: es un gigante helado con una inclinación extrema de su eje.
+
+Neptuno: es el planeta más lejano del Sol entre los ocho planetas principales.
+
+Además de los planetas existen planetas enanos, asteroides, cometas, lunas y otros cuerpos.
+
+La Luna es el satélite natural de la Tierra. Su gravedad influye en fenómenos como las mareas.
+
+---
+
+# 3. LA TIERRA
+
+La Tierra es un planeta rocoso. Su superficie contiene continentes, océanos, montañas, ríos, desiertos y otros ecosistemas.
+
+La Tierra posee una atmósfera formada principalmente por nitrógeno y oxígeno. La atmósfera ayuda a regular el clima y protege parcialmente al planeta de diversos fenómenos del espacio.
+
+La Tierra está dividida internamente en varias capas principales:
+
+Corteza: capa exterior sólida.
+
+Manto: región situada debajo de la corteza, formada por materiales muy calientes que pueden comportarse lentamente como sólidos deformables.
+
+Núcleo externo: región principalmente líquida.
+
+Núcleo interno: región central extremadamente caliente y sometida a enorme presión.
+
+El movimiento de las placas tectónicas modifica lentamente la superficie terrestre. Estos movimientos pueden producir terremotos, volcanes y formación de montañas.
+
+---
+
+# 4. CONTINENTES Y OCÉANOS
+
+Tradicionalmente se reconocen varios continentes:
+
+África.
+
+América.
+
+Antártida.
+
+Asia.
+
+Europa.
+
+Oceanía.
+
+La Tierra posee grandes masas de agua conocidas como océanos. Entre los principales se encuentran:
+
+Océano Pacífico.
+
+Océano Atlántico.
+
+Océano Índico.
+
+Océano Ártico.
+
+Océano Austral.
+
+El agua cubre la mayor parte de la superficie terrestre.
+
+---
+
+# 5. EL AGUA
+
+El agua es una sustancia fundamental para la vida conocida. Está formada por dos átomos de hidrógeno y uno de oxígeno.
+
+Puede encontrarse principalmente en estado sólido, líquido o gaseoso.
+
+El ciclo del agua incluye procesos como:
+
+Evaporación: el agua líquida pasa al estado gaseoso.
+
+Condensación: el vapor de agua forma gotas.
+
+Precipitación: el agua cae desde la atmósfera en forma de lluvia, nieve u otros fenómenos.
+
+Infiltración: parte del agua entra en el suelo.
+
+Escorrentía: el agua se desplaza por la superficie.
+
+---
+
+# 6. LA VIDA
+
+La vida conocida está formada por organismos capaces de realizar procesos como obtener energía, mantener ciertas condiciones internas, responder al entorno y reproducirse.
+
+La célula es la unidad fundamental de los seres vivos.
+
+Existen organismos unicelulares, formados por una sola célula, y organismos pluricelulares, formados por muchas células.
+
+Los seres vivos incluyen grupos como:
+
+Animales.
+
+Plantas.
+
+Hongos.
+
+Diversos microorganismos.
+
+La clasificación científica de los seres vivos busca organizar las especies según sus características y relaciones evolutivas.
+
+---
+
+# 7. EL CUERPO HUMANO
+
+El cuerpo humano está formado por células, tejidos, órganos y sistemas.
+
+Algunos sistemas importantes son:
+
+Sistema nervioso: procesa información y participa en el control del cuerpo.
+
+Sistema circulatorio: transporta sangre y diversas sustancias.
+
+Sistema respiratorio: participa en el intercambio de gases.
+
+Sistema digestivo: procesa alimentos y absorbe nutrientes.
+
+Sistema muscular: permite el movimiento.
+
+Sistema óseo: proporciona soporte y protección.
+
+Sistema inmunitario: participa en la defensa del organismo.
+
+El cerebro es un órgano central del sistema nervioso y participa en funciones como percepción, movimiento, memoria, aprendizaje y pensamiento.
+
+La salud depende de múltiples factores, incluyendo genética, ambiente, alimentación, actividad física y acceso a atención médica.
+
+La información médica debe utilizarse con responsabilidad. Una inteligencia artificial puede explicar conocimientos generales, pero no debe sustituir la evaluación de profesionales de salud.
+
+---
+
+# 8. LOS ANIMALES
+
+Los animales son organismos pertenecientes al reino Animalia.
+
+Existen grupos muy diversos.
+
+Los vertebrados poseen columna vertebral. Entre ellos se encuentran:
+
+Mamíferos.
+
+Aves.
+
+Reptiles.
+
+Anfibios.
+
+Peces.
+
+Los invertebrados no poseen columna vertebral. Incluyen grupos como:
+
+Insectos.
+
+Arácnidos.
+
+Moluscos.
+
+Crustáceos.
+
+Equinodermos.
+
+Muchos animales cumplen funciones importantes dentro de los ecosistemas, como polinización, dispersión de semillas, control de poblaciones y reciclaje de materia.
+
+---
+
+# 9. LAS PLANTAS
+
+Las plantas son organismos fundamentales para muchos ecosistemas.
+
+Muchas plantas realizan fotosíntesis, un proceso mediante el cual utilizan energía de la luz para producir sustancias químicas necesarias para su funcionamiento.
+
+Las plantas proporcionan alimento, refugio y oxígeno como resultado de procesos biológicos relacionados con la fotosíntesis.
+
+Existen árboles, arbustos, hierbas, musgos, helechos y muchas otras formas de plantas.
+
+Las plantas tienen importancia en la agricultura, la alimentación, los ecosistemas y la regulación ambiental.
+
+---
+
+# 10. LOS ECOSISTEMAS
+
+Un ecosistema está formado por seres vivos y por los elementos no vivos con los que interactúan.
+
+Algunos ejemplos son:
+
+Bosques.
+
+Selvas.
+
+Desiertos.
+
+Océanos.
+
+Ríos.
+
+Humedales.
+
+Praderas.
+
+Montañas.
+
+Los organismos de un ecosistema forman redes alimentarias.
+
+Los productores, como muchas plantas, producen materia orgánica utilizando fuentes de energía.
+
+Los consumidores obtienen energía alimentándose de otros organismos.
+
+Los descomponedores participan en la transformación y reciclaje de materia.
+
+La biodiversidad es la variedad de formas de vida existentes.
+
+---
+
+# 11. LA FÍSICA
+
+La física estudia la materia, la energía, el movimiento y las interacciones fundamentales de la naturaleza.
+
+Algunos conceptos importantes son:
+
+Materia: aquello que posee masa y ocupa espacio.
+
+Energía: capacidad relacionada con producir cambios o realizar trabajo.
+
+Fuerza: interacción capaz de modificar el movimiento de un objeto.
+
+Gravedad: interacción asociada con la atracción entre cuerpos con masa.
+
+Velocidad: relación entre el cambio de posición y el tiempo.
+
+Aceleración: cambio de la velocidad.
+
+La física incluye áreas como:
+
+Mecánica.
+
+Termodinámica.
+
+Electromagnetismo.
+
+Óptica.
+
+Física cuántica.
+
+Relatividad.
+
+---
+
+# 12. LA QUÍMICA
+
+La química estudia la composición, estructura, propiedades y transformaciones de la materia.
+
+Los átomos son unidades fundamentales de los elementos químicos.
+
+Un átomo contiene partículas como:
+
+Protones.
+
+Neutrones.
+
+Electrones.
+
+Los elementos químicos están organizados en la tabla periódica.
+
+Una molécula está formada por átomos unidos mediante enlaces químicos.
+
+Las reacciones químicas transforman unas sustancias en otras.
+
+La química tiene aplicaciones en medicina, agricultura, industria, materiales, energía y tecnología.
+
+---
+
+# 13. LA BIOLOGÍA
+
+La biología estudia los seres vivos.
+
+Entre sus áreas se encuentran:
+
+Genética.
+
+Ecología.
+
+Evolución.
+
+Microbiología.
+
+Botánica.
+
+Zoología.
+
+Anatomía.
+
+Fisiología.
+
+La genética estudia cómo se transmite y utiliza la información hereditaria.
+
+El ADN contiene información genética utilizada por los organismos.
+
+La evolución explica cómo las poblaciones de organismos cambian a lo largo de muchas generaciones.
+
+---
+
+# 14. LAS MATEMÁTICAS
+
+Las matemáticas son una disciplina utilizada para estudiar cantidades, estructuras, patrones, relaciones y cambios.
+
+Algunas áreas principales son:
+
+Aritmética.
+
+Álgebra.
+
+Geometría.
+
+Trigonometría.
+
+Cálculo.
+
+Probabilidad.
+
+Estadística.
+
+Las matemáticas tienen aplicaciones en ingeniería, ciencia, informática, economía, construcción y muchas otras áreas.
+
+Los números pueden clasificarse en diferentes conjuntos, incluyendo:
+
+Naturales.
+
+Enteros.
+
+Racionales.
+
+Irracionales.
+
+Reales.
+
+Complejos.
+
+---
+
+# 15. LA TECNOLOGÍA
+
+La tecnología consiste en conocimientos, herramientas, técnicas y sistemas creados para resolver problemas o realizar tareas.
+
+Algunos campos tecnológicos son:
+
+Computación.
+
+Robótica.
+
+Electrónica.
+
+Telecomunicaciones.
+
+Inteligencia artificial.
+
+Biotecnología.
+
+Energía.
+
+Fabricación.
+
+La computadora es una máquina capaz de procesar información mediante instrucciones.
+
+Un programa es un conjunto de instrucciones que indica a una computadora qué operaciones realizar.
+
+---
+
+# 16. INTERNET
+
+Internet es una red mundial de redes informáticas.
+
+Permite el intercambio de información entre computadoras y otros dispositivos.
+
+Algunos conceptos importantes son:
+
+Servidor: sistema que proporciona recursos o servicios.
+
+Cliente: dispositivo o programa que solicita servicios.
+
+Sitio web: conjunto de recursos accesibles mediante la web.
+
+Base de datos: sistema organizado para almacenar información.
+
+Protocolo: conjunto de reglas utilizadas para la comunicación.
+
+Internet permite comunicación, educación, investigación, comercio y entretenimiento, pero también requiere medidas de seguridad y verificación de información.
+
+---
+
+# 17. PROGRAMACIÓN
+
+La programación consiste en crear instrucciones que una computadora puede ejecutar.
+
+Algunos lenguajes de programación son:
+
+Python.
+
+JavaScript.
+
+Java.
+
+C.
+
+C++.
+
+C#.
+
+Un programa puede contener:
+
+Variables.
+
+Funciones.
+
+Condiciones.
+
+Bucles.
+
+Datos.
+
+Algoritmos.
+
+Un algoritmo es una serie de pasos definidos para resolver un problema.
+
+Python es un lenguaje ampliamente utilizado en automatización, ciencia de datos, inteligencia artificial y desarrollo de software.
+
+---
+
+# 18. INTELIGENCIA ARTIFICIAL
+
+La inteligencia artificial es un campo de la computación que desarrolla sistemas capaces de realizar tareas asociadas con el procesamiento de información, reconocimiento de patrones, generación de contenido y toma de decisiones dentro de determinados límites.
+
+Algunos tipos de sistemas de IA incluyen:
+
+Modelos de lenguaje.
+
+Sistemas de visión artificial.
+
+Sistemas de recomendación.
+
+Modelos de aprendizaje automático.
+
+Sistemas de reconocimiento de voz.
+
+Agentes capaces de utilizar herramientas.
+
+Una IA no posee automáticamente conocimiento perfecto sobre todo. Su funcionamiento depende del modelo, los datos, las herramientas disponibles y sus límites técnicos.
+
+Una IA puede combinar un modelo de razonamiento con:
+
+Memoria.
+
+Bases de datos.
+
+Documentos.
+
+Búsqueda.
+
+Calculadoras.
+
+Programas.
+
+Sensores.
+
+Robots.
+
+Esta combinación permite construir sistemas multipropósito.
+
+---
+
+# 19. LA HISTORIA HUMANA
+
+La historia estudia acontecimientos y procesos relacionados con las sociedades humanas.
+
+Las primeras sociedades humanas dependían principalmente de actividades como la caza y la recolección.
+
+Posteriormente, el desarrollo de la agricultura permitió el crecimiento de asentamientos permanentes y sociedades más complejas.
+
+A lo largo de la historia surgieron numerosas civilizaciones y culturas.
+
+El desarrollo de la escritura permitió conservar información de una manera más duradera.
+
+La humanidad ha desarrollado ciudades, sistemas políticos, religiones, tecnologías, ciencias, medios de transporte y sistemas de comunicación.
+
+La historia debe estudiarse utilizando fuentes y considerando que diferentes sociedades pueden interpretar acontecimientos desde perspectivas distintas.
+
+---
+
+# 20. GEOGRAFÍA
+
+La geografía estudia lugares, territorios, paisajes y las relaciones entre las personas y el ambiente.
+
+La geografía física estudia elementos naturales como:
+
+Montañas.
+
+Ríos.
+
+Océanos.
+
+Clima.
+
+Relieve.
+
+La geografía humana estudia temas relacionados con:
+
+Población.
+
+Ciudades.
+
+Economía.
+
+Migraciones.
+
+Cultura.
+
+Territorios.
+
+Los países y sus características pueden cambiar con el tiempo, por lo que una biblioteca de conocimiento debe actualizar la información geográfica y política periódicamente.
+
+---
+
+# 21. ECONOMÍA
+
+La economía estudia cómo las personas y las sociedades utilizan recursos para producir, distribuir e intercambiar bienes y servicios.
+
+Algunos conceptos importantes son:
+
+Producción.
+
+Consumo.
+
+Ahorro.
+
+Inversión.
+
+Oferta.
+
+Demanda.
+
+Precio.
+
+Mercado.
+
+Trabajo.
+
+Inflación.
+
+Las economías reales son sistemas complejos influenciados por decisiones humanas, recursos, tecnología, políticas y acontecimientos internacionales.
+
+---
+
+# 22. EDUCACIÓN
+
+La educación es el proceso mediante el cual las personas adquieren conocimientos, habilidades y formas de comprender el mundo.
+
+El aprendizaje puede realizarse mediante:
+
+Lectura.
+
+Práctica.
+
+Experimentación.
+
+Observación.
+
+Conversación.
+
+Resolución de problemas.
+
+La repetición y la retroalimentación pueden ayudar al aprendizaje.
+
+Las personas aprenden de maneras y ritmos diferentes.
+
+Una inteligencia artificial educativa debe intentar adaptar sus explicaciones al nivel de conocimiento del usuario.
+
+---
+
+# 23. ARTE Y CULTURA
+
+El arte es una forma de expresión humana que puede utilizar imágenes, sonidos, movimiento, palabras y otros medios.
+
+Algunas formas de arte son:
+
+Pintura.
+
+Escultura.
+
+Música.
+
+Literatura.
+
+Teatro.
+
+Cine.
+
+Danza.
+
+Fotografía.
+
+La cultura incluye conocimientos, costumbres, lenguas, tradiciones y expresiones desarrolladas por diferentes comunidades humanas.
+
+No existe una única cultura mundial. La humanidad posee una enorme diversidad cultural.
+
+---
+
+# 24. IDIOMAS
+
+Los idiomas son sistemas de comunicación utilizados por grupos humanos.
+
+Existen miles de lenguas y variedades lingüísticas.
+
+El lenguaje permite transmitir información, ideas, emociones y conocimientos.
+
+Los idiomas pueden cambiar con el tiempo.
+
+La traducción entre idiomas requiere considerar no solamente las palabras, sino también el contexto y los significados.
+
+---
+
+# 25. INGENIERÍA
+
+La ingeniería aplica conocimientos científicos, matemáticos y técnicos para diseñar y construir soluciones.
+
+Algunas ramas son:
+
+Ingeniería civil.
+
+Ingeniería mecánica.
+
+Ingeniería eléctrica.
+
+Ingeniería electrónica.
+
+Ingeniería informática.
+
+Ingeniería química.
+
+Ingeniería ambiental.
+
+Ingeniería aeroespacial.
+
+Los ingenieros deben considerar factores como seguridad, materiales, costos, eficiencia y efectos ambientales.
+
+---
+
+# 26. ROBÓTICA
+
+La robótica combina mecánica, electrónica, programación y sistemas de control.
+
+Un robot puede incluir:
+
+Sensores.
+
+Procesadores.
+
+Motores.
+
+Baterías.
+
+Actuadores.
+
+Programas.
+
+Los sensores permiten obtener información del entorno.
+
+Los actuadores permiten producir movimientos o acciones.
+
+Un sistema robótico puede funcionar mediante instrucciones fijas, control automático o sistemas de inteligencia artificial.
+
+---
+
+# 27. ENERGÍA
+
+La energía es necesaria para producir cambios y realizar trabajo.
+
+Algunas fuentes de energía son:
+
+Solar.
+
+Eólica.
+
+Hidroeléctrica.
+
+Geotérmica.
+
+Nuclear.
+
+Combustibles fósiles.
+
+Las fuentes de energía tienen diferentes ventajas, limitaciones y efectos ambientales.
+
+La transición hacia sistemas energéticos sostenibles es un desafío importante para muchas sociedades.
+
+---
+
+# 28. MEDIO AMBIENTE
+
+El medio ambiente incluye las condiciones y elementos naturales que rodean a los seres vivos.
+
+Problemas ambientales importantes incluyen:
+
+Contaminación.
+
+Deforestación.
+
+Pérdida de biodiversidad.
+
+Cambio climático.
+
+Degradación del suelo.
+
+Contaminación del agua.
+
+La protección ambiental requiere conocimientos científicos, decisiones sociales y cooperación entre personas, organizaciones y gobiernos.
+
+---
+
+# 29. PRINCIPIOS PARA IA TODO
+
+IA TODO debe seguir algunos principios fundamentales:
+
+1. No afirmar como cierto algo que no conoce.
+
+2. Diferenciar hechos, opiniones e hipótesis.
+
+3. Reconocer cuándo una información puede estar desactualizada.
+
+4. Utilizar fuentes y conocimientos disponibles de forma organizada.
+
+5. Recordar información importante cuando sea apropiado.
+
+6. Proteger información privada.
+
+7. Explicar sus límites.
+
+8. No reemplazar automáticamente a profesionales en situaciones de alto riesgo.
+
+9. Ayudar a las personas a comprender.
+
+10. Poder utilizar herramientas y fuentes de conocimiento adicionales.
+
+---
+
+# 30. ESTRUCTURA DE LA BIBLIOTECA MUNDIAL
+
+Este documento es solamente un núcleo inicial.
+
+La Biblioteca Mundial completa puede dividirse en grandes colecciones:
+
+COLECCIÓN 1: Universo y astronomía.
+
+COLECCIÓN 2: Física.
+
+COLECCIÓN 3: Química y elementos.
+
+COLECCIÓN 4: Biología y vida.
+
+COLECCIÓN 5: Animales.
+
+COLECCIÓN 6: Plantas.
+
+COLECCIÓN 7: Medicina y cuerpo humano.
+
+COLECCIÓN 8: Matemáticas.
+
+COLECCIÓN 9: Geografía mundial.
+
+COLECCIÓN 10: Países y territorios.
+
+COLECCIÓN 11: Historia mundial.
+
+COLECCIÓN 12: Civilizaciones.
+
+COLECCIÓN 13: Tecnología.
+
+COLECCIÓN 14: Computación.
+
+COLECCIÓN 15: Programación.
+
+COLECCIÓN 16: Inteligencia artificial.
+
+COLECCIÓN 17: Ingeniería.
+
+COLECCIÓN 18: Robótica y electrónica.
+
+COLECCIÓN 19: Economía y negocios.
+
+COLECCIÓN 20: Arte, música y cultura.
+
+COLECCIÓN 21: Idiomas y comunicación.
+
+COLECCIÓN 22: Agricultura y alimentos.
+
+COLECCIÓN 23: Medio ambiente.
+
+COLECCIÓN 24: Inventos y descubrimientos.
+
+COLECCIÓN 25: Sociedad y educación.
+
+La Biblioteca Mundial debe crecer continuamente. Cada nueva colección puede contener miles de temas organizados para que IA TODO pueda buscar información relevante y utilizarla como contexto al responder.
+
+FIN DE LA PARTE 1.
+# CAMBIO Y CRECIMIENTO DEL CONOCIMIENTO
+
+## Regla de actualización de IA TODO
+
+El conocimiento del mundo no es completamente fijo. La información puede cambiar debido a nuevos descubrimientos, investigaciones, elecciones, inventos, cambios sociales, avances científicos y acontecimientos históricos.
+
+Por esta razón, IA TODO debe comprender que existen diferentes tipos de información:
+
+### 1. CONOCIMIENTO ESTABLE
+
+Es información que normalmente no cambia con frecuencia.
+
+Ejemplos:
+
+* Principios matemáticos.
+* Hechos históricos ocurridos en el pasado.
+* Información básica sobre física.
+* Conceptos fundamentales de biología.
+* Información geográfica básica.
+
+### 2. CONOCIMIENTO ACTUALIZABLE
+
+Es información que puede cambiar con el tiempo.
+
+Ejemplos:
+
+* Presidentes y gobiernos.
+* Resultados de elecciones.
+* Noticias.
+* Precios.
+* Población.
+* Cargos políticos.
+* Empresas.
+* Tecnología.
+* Descubrimientos científicos recientes.
+* Récords deportivos.
+* Eventos actuales.
+
+---
+
+# PROCESO DE CAMBIO DEL CONOCIMIENTO
+
+Cuando IA TODO recibe información nueva, debe seguir este proceso:
+
+1. Identificar qué información ha cambiado.
+
+2. Comparar la información nueva con la información almacenada anteriormente.
+
+3. Verificar la nueva información mediante fuentes confiables cuando sea posible.
+
+4. No eliminar inmediatamente la información anterior.
+
+5. Guardar la información anterior como información histórica.
+
+6. Agregar la nueva información con una fecha de actualización.
+
+7. Indicar claramente cuál información es actual, histórica o pendiente de verificación.
+
+---
+
+# EJEMPLO: CAMBIO DE PRESIDENTE
+
+INFORMACIÓN ANTERIOR:
+
+Cargo: Presidente.
+
+Persona: [Nombre anterior].
+
+Estado: HISTÓRICO.
+
+Período: [Fecha de inicio] - [Fecha de finalización].
+
+INFORMACIÓN NUEVA:
+
+Cargo: Presidente.
+
+Persona: [Nombre actual].
+
+Estado: ACTUAL.
+
+Fecha de actualización: [Fecha].
+
+Nivel de verificación: [Verificado / Pendiente de verificación].
+
+---
+
+# REGLA PARA RESPONDER
+
+Si un usuario pregunta:
+
+**¿Quién es actualmente el presidente?**
+
+IA TODO debe buscar la información marcada como:
+
+ACTUAL.
+
+Si pregunta:
+
+**¿Quién era presidente antes?**
+
+Debe buscar la información marcada como:
+
+HISTÓRICA.
+
+Si no puede confirmar un cambio reciente, debe decir:
+
+> "Mi información almacenada puede no incluir cambios ocurridos después de mi última actualización."
+
+IA TODO nunca debe inventar información nueva para llenar un vacío de conocimiento.
+
+---
+
+# CRECIMIENTO DE LA BIBLIOTECA
+
+La Biblioteca Mundial puede crecer continuamente.
+
+Cada nuevo conocimiento debe poder tener:
+
+TEMA:
+
+INFORMACIÓN:
+
+FECHA DE CREACIÓN:
+
+FECHA DE ÚLTIMA ACTUALIZACIÓN:
+
+ESTADO:
+
+FUENTE:
+
+NIVEL DE CONFIANZA:
+
+INFORMACIÓN ANTERIOR RELACIONADA:
+
+---
+
+# DESCRIPCIÓN GENERAL DEL SISTEMA
+
+IA TODO es un sistema diseñado para utilizar una biblioteca de conocimiento en constante crecimiento.
+
+Su conocimiento puede ampliarse mediante nuevos documentos, datos, investigaciones y actualizaciones.
+
+La IA debe diferenciar entre conocimiento histórico, conocimiento estable y conocimiento que puede cambiar con el tiempo.
+
+Cuando una información cambie, la IA debe conservar el historial anterior y registrar la nueva información como una actualización.
+
+El objetivo es permitir que la Biblioteca Mundial crezca progresivamente sin perder el conocimiento histórico.
+
+---
+
+# PRINCIPIO FINAL
+
+El conocimiento no permanece siempre igual.
+
+El mundo cambia.
+
+La ciencia descubre nuevas cosas.
+
+Los gobiernos cambian.
+
+Las personas crean nuevas tecnologías.
+
+Las sociedades evolucionan.
+
+Por eso, IA TODO debe estar preparada para aprender de nueva información, actualizar su biblioteca y conservar un registro de cómo cambió el conocimiento a través del tiempo.
+
+**FIN DEL SISTEMA DE CAMBIO Y CRECIMIENTO DEL CONOCIMIENTO.**
