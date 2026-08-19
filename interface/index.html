@@ -2,61 +2,41 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IA Todo - Chat</title>
+    <title>IA Asistente - Joao</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .chat-container { width: 100%; max-width: 600px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .chat-box { height: 400px; border: 1px solid #ccc; border-radius: 4px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; background: #fafafa; }
-        .input-group { display: flex; gap: 10px; }
-        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .message { margin-bottom: 10px; padding: 8px; border-radius: 4px; }
-        .user-message { background: #e0f7fa; text-align: right; }
-        .ai-message { background: #eceff1; text-align: left; }
+        /* Estilos sencillos para que se vea ordenado */
+        body { font-family: Arial, sans-serif; background: #f4f4f9; padding: 20px; }
+        #chat-container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        #mensajes { height: 300px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+        .controles { display: flex; gap: 5px; align-items: center; }
+        input[type="text"] { flex: 1; padding: 10px; }
+        button, label { padding: 10px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        label { background: #6c757d; }
+        input[type="file"] { display: none; }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <h2>IA Todo</h2>
-        <div id="chat-box" class="chat-box"></div>
-        <div class="input-group">
-            <input type="text" id="user-input" placeholder="Escribe tu mensaje aquí..." onkeypress="handleKeyPress(event)">
-            <button onclick="enviarMensaje()">Enviar</button>
-        </div>
+
+<div id="chat-container">
+    <h2>Asistente de Inteligencia Artificial</h2>
+    <div id="mensajes"></div>
+    
+    <div class="controles">
+        <!-- Botón para adjuntar archivos (Imágenes o PDF) -->
+        <label for="archivo-input">📁</label>
+        <input type="file" id="archivo-input" accept="image/*,application/pdf">
+
+        <!-- Botón para activar el micrófono -->
+        <button id="btn-mic" type="button">🎤</button>
+
+        <!-- Campo de texto normal -->
+        <input type="text" id="mensaje-input" placeholder="Escribe tu mensaje...">
+        
+        <!-- Botón de enviar -->
+        <button id="btn-enviar" type="button">Enviar</button>
     </div>
+</div>
 
-    <script>
-        async function enviarMensaje() {
-            const input = document.getElementById('user-input');
-            const chatBox = document.getElementById('chat-box');
-            const mensaje = input.value.trim();
-            if (!mensaje) return;
-
-            chatBox.innerHTML += `<div class="message user-message"><b>Tú:</b> ${mensaje}</div>`;
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mensaje: mensaje })
-                });
-                const data = await response.json();
-                chatBox.innerHTML += `<div class="message ai-message"><b>IA:</b> ${data.respuesta}</div>`;
-            } catch (error) {
-                chatBox.innerHTML += `<div class="message ai-message" style="color: red;"><b>Error:</b> No se pudo conectar con la IA.</div>`;
-            }
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                enviarMensaje();
-            }
-        }
-    </script>
+<script src="/static/script.js"></script>
 </body>
 </html>
