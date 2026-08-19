@@ -1,8 +1,9 @@
 import os
 from flask import Flask, render_template, request, jsonify
-from ai.brain import preguntar
+# Asegúrate de importar la función que tienes en tu archivo ai.brain.py
+from ai.brain import preguntar 
 
-# Así debería quedar la configuración en tu app.py
+# Configuramos la app para que reconozca la carpeta 'interface' y 'static'
 app = Flask(__name__, template_folder='interface', static_folder='static')
 
 @app.route("/")
@@ -11,16 +12,25 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
-    mensaje = data.get("mensaje", "")
-    try:
-        respuesta = preguntar(mensaje)
-    except Exception as e:
-        print(f"Error de servidor: {e}")
-        respuesta = "Lo siento, los servidores están muy ocupados en este momento. Intenta de nuevo en unos segundos."
+    # Recibimos el mensaje de texto
+    mensaje = request.form.get("mensaje", "")
+    
+    # Recibimos el archivo (imagen o PDF) si el usuario lo envió
+    archivo = request.files.get("archivo")
+    
+    ruta_archivo = None
+    if archivo:
+        # Guardamos el archivo en una carpeta llamada 'uploads'
+        if not os.path.exists("uploads"):
+            os.makedirs("uploads")
+        ruta_archivo = os.path.join("uploads", archivo.filename)
+        archivo.save(ruta_archivo)
+
+    # Procesamos la respuesta usando tu función de IA
+    # Nota: Asegúrate de que tu función en ai.brain.py acepte el argumento de archivo
+    respuesta = preguntar(mensaje) # Aquí puedes ajustar si necesitas pasar la ruta_archivo
     
     return jsonify({"respuesta": respuesta})
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
