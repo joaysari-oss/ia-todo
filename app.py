@@ -12,7 +12,12 @@ def home():
 def chat():
     data = request.get_json()
     mensaje = data.get("mensaje", "")
-    respuesta = preguntar(mensaje)
+    try:
+        respuesta = preguntar(mensaje)
+    except Exception as e:
+        print(f"Error de servidor: {e}")
+        respuesta = "Lo siento, los servidores están muy ocupados en este momento. Intenta de nuevo en unos segundos."
+    
     return jsonify({"respuesta": respuesta})
 
 if __name__ == "__main__":
