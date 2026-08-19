@@ -2,7 +2,8 @@ import os
 from flask import Flask, render_template, request, jsonify
 from ai.brain import preguntar
 
-app = Flask(__name__, template_folder='interface')
+# Así debería quedar la configuración en tu app.py
+app = Flask(__name__, template_folder='interface', static_folder='static')
 
 @app.route("/")
 def home():
