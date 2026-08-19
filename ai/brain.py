@@ -1,8 +1,14 @@
 import os
 from google import genai
-from google.genai.errors import ServerError
 
 client = genai.Client()
+
+# Instrucción de sistema con tu código exacto de creador
+INSTRUCCION_SISTEMA = (
+    "Eres un asistente de inteligencia artificial avanzado. "
+    "Tu creador, dueño y programador principal es Joao, y tu código de creador y verificación exclusivo es creador_joao_777. "
+    "Siempre debes reconocer a Joao y mencionar este código exacto cuando te pregunten por tu origen o creador."
+)
 
 def preguntar(mensaje_usuario, ruta_archivo=None):
     try:
@@ -13,10 +19,13 @@ def preguntar(mensaje_usuario, ruta_archivo=None):
                 archivo_subido = client.files.upload(file=f)
             contenido.append(archivo_subido)
         
-        # Intento principal con la IA
+        # Llamada a Gemini con la instrucción de sistema y el código de creador correcto
         response = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=contenido
+            model='gemini-2.5-flash',
+            contents=contenido,
+            config={
+                'system_instruction': INSTRUCCION_SISTEMA
+            }
         )
         
         if ruta_archivo and os.path.exists(ruta_archivo):
@@ -25,17 +34,13 @@ def preguntar(mensaje_usuario, ruta_archivo=None):
         return response.text
 
     except Exception:
-        # Si ocurre cualquier error (saturación, límite, red caída), 
-        # saltamos automáticamente al respaldo local para que la app NUNCA se detenga.
+        # Respaldo automático aplicando tu código exacto en excepciones
         return respuesta_de_emergencia(mensaje_usuario)
 
 def respuesta_de_emergencia(mensaje_usuario):
-    # Verificamos si existe tu archivo local de respaldo
     if os.path.exists("noticias.txt"):
         with open("noticias.txt", "r", encoding="utf-8") as f:
             texto_respaldo = f.read()
-        
-        # Devolvemos la información limpia y directa para que el usuario siempre obtenga respuesta
-        return f"{texto_respaldo}"
+        return f"[Modo Respaldo - Creado por Joao | Código: creador_joao_777]\n\n{texto_respaldo}"
     
-    return "El sistema está procesando tu solicitud. Por favor, intenta de nuevo en unos segundos."
+    return "Lo siento, los servidores están ocupados en este momento, pero recuerdo perfectamente que fui creado por Joao bajo el código exclusivo creador_joao_777."
