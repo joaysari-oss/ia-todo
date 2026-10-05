@@ -1,22 +1,23 @@
-// ============================================================
-// IA TODO - Frontend que se conecta al cerebro Gemini (Flask)
-// ============================================================
-
+// IA TODO - Frontend con historial + Modo Creador
 const chat = document.getElementById('chat');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('send');
 const typing = document.getElementById('typing');
 const btnMic = document.getElementById('btnMic');
+const btnCamera = document.getElementById('btnCamera');
+const btnGallery = document.getElementById('btnGallery');
 const btnFile = document.getElementById('btnFile');
-const fileInput = document.getElementById('fileInput');
+const btnNewChat = document.getElementById('btnNewChat');
+const creatorBadge = document.getElementById('creatorBadge');
+const fileCamera = document.getElementById('fileCamera');
+const fileGallery = document.getElementById('fileGallery');
+const fileDoc = document.getElementById('fileDoc');
 
 let reconociendo = false;
 let archivoSeleccionado = null;
+let historial = []; // Memoria de la conversación
 
-// ---------- Utilidades ----------
-function scrollBottom() {
-  chat.scrollTop = chat.scrollHeight;
-}
+function scrollBottom() { chat.scrollTop = chat.scrollHeight; }
 
 function addMessage(text, type = 'bot', extra = null) {
   const div = document.createElement('div');
@@ -31,17 +32,13 @@ function addMessage(text, type = 'bot', extra = null) {
 
   const bubble = document.createElement('div');
   bubble.className = 'bubble';
-
-  if (typeof text === 'string' && text) {
-    bubble.textContent = text;
-  }
+  if (typeof text === 'string' && text) bubble.textContent = text;
 
   if (extra) {
     if (extra.image) {
       const img = document.createElement('img');
       img.src = extra.image;
       img.className = 'media-preview';
-      img.alt = 'Imagen enviada';
       bubble.appendChild(img);
     }
     if (extra.fileName) {
@@ -63,37 +60,49 @@ function showTyping(show) {
   if (show) scrollBottom();
 }
 
-// ---------- Enviar mensaje al backend (tu cerebro Gemini) ----------
+function mensajeBienvenida() {
+  addMessage('¡Hola! Soy IA TODO.\n\nPuedo ayudarte con cualquier tema, recibir fotos, documentos y escucharte por micrófono.\n\n¿En qué te ayudo?', 'bot');
+}
+
+// Nuevo chat → limpia historial
+btnNewChat.addEventListener('click', () => {
+  chat.innerHTML = '';
+  historial = [];
+  archivoSeleccionado = null;
+  fileCamera.value = '';
+  fileGallery.value = '';
+  fileDoc.value = '';
+  input.value = '';
+  input.style.height = 'auto';
+  mensajeBienvenida();
+  input.focus();
+});
+
 async function enviarMensaje(texto) {
   const formData = new FormData();
   formData.append('mensaje', texto || '');
+  formData.append('historial', JSON.stringify(historial));
 
   if (archivoSeleccionado) {
     formData.append('archivo', archivoSeleccionado);
   }
 
   try {
-    const res = await fetch('/chat', {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!res.ok) throw new Error('Error en el servidor');
-
+    const res = await fetch('/chat', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Error servidor');
     const data = await res.json();
-    return data.respuesta || 'No recibí respuesta del servidor.';
+    return data;
   } catch (err) {
     console.error(err);
-    return 'Hubo un problema al conectar con el cerebro. Intenta de nuevo en unos segundos.';
+    return { respuesta: 'Hubo un problema al conectar con el cerebro. Intenta de nuevo.', modo_creador: false };
   }
 }
 
-// ---------- Enviar ----------
 async function enviar() {
   const texto = input.value.trim();
   if (!texto && !archivoSeleccionado) return;
 
-  // Mostrar mensaje del usuario
+  // Mostrar mensaje usuario
   if (archivoSeleccionado) {
     if (archivoSeleccionado.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -105,118 +114,108 @@ async function enviar() {
       };
       reader.readAsDataURL(archivoSeleccionado);
     } else {
-      addMessage(texto || 'Documento enviado', 'user', {
-        fileName: archivoSeleccionado.name
-      });
+      addMessage(texto || 'Documento enviado', 'user', { fileName: archivoSeleccionado.name });
     }
   } else {
     addMessage(texto, 'user');
   }
 
+  // Guardar en historial (solo texto)
+  if (texto) {
+    historial.push({ role: 'user', content: texto });
+  }
+
   input.value = '';
   input.style.height = 'auto';
   sendBtn.disabled = true;
-
   showTyping(true);
 
-  const respuesta = await enviarMensaje(texto);
+  const data = await enviarMensaje(texto);
+  const respuesta = data.respuesta || 'Sin respuesta';
+  const modoCreador = data.modo_creador === true;
 
   showTyping(false);
-  addMessage(respuesta, 'bot');
 
-  // Limpiar archivo después de enviar
+  if (modoCreador) {
+    creatorBadge.classList.add('show');
+    addMessage(respuesta, 'system');
+  } else {
+    addMessage(respuesta, 'bot');
+  }
+
+  // Guardar respuesta en historial
+  historial.push({ role: 'assistant', content: respuesta });
+
   archivoSeleccionado = null;
-  fileInput.value = '';
+  fileCamera.value = '';
+  fileGallery.value = '';
+  fileDoc.value = '';
   sendBtn.disabled = false;
   input.focus();
 }
 
 sendBtn.addEventListener('click', enviar);
-
-input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    enviar();
-  }
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
 });
-
 input.addEventListener('input', () => {
   input.style.height = 'auto';
   input.style.height = Math.min(input.scrollHeight, 120) + 'px';
 });
 
-// ---------- Micrófono (voz a texto) ----------
+// Micrófono
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
-
 if (SpeechRecognition) {
   recognition = new SpeechRecognition();
   recognition.lang = 'es-ES';
   recognition.continuous = false;
   recognition.interimResults = false;
-
-  recognition.onstart = () => {
-    reconociendo = true;
-    btnMic.classList.add('recording');
-    btnMic.title = 'Escuchando... (clic para detener)';
-  };
-
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    input.value = transcript;
+  recognition.onstart = () => { reconociendo = true; btnMic.classList.add('recording'); };
+  recognition.onresult = (e) => {
+    input.value = e.results[0][0].transcript;
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 120) + 'px';
     enviar();
   };
-
-  recognition.onerror = (event) => {
-    if (event.error === 'not-allowed') {
-      addMessage('No tengo permiso para usar el micrófono. Actívalo en la configuración del navegador (mejor en Chrome o Edge).', 'bot');
-    }
-    reconociendo = false;
-    btnMic.classList.remove('recording');
-    btnMic.title = 'Hablar (voz a texto) — Mejor en Chrome/Edge';
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed') addMessage('Activa el permiso del micrófono (mejor en Chrome o Edge).', 'bot');
+    reconociendo = false; btnMic.classList.remove('recording');
   };
-
-  recognition.onend = () => {
-    reconociendo = false;
-    btnMic.classList.remove('recording');
-    btnMic.title = 'Hablar (voz a texto) — Mejor en Chrome/Edge';
-  };
-
+  recognition.onend = () => { reconociendo = false; btnMic.classList.remove('recording'); };
   btnMic.addEventListener('click', () => {
-    if (reconociendo) {
-      recognition.stop();
-    } else {
-      try {
-        recognition.start();
-      } catch (e) {
-        addMessage('No se pudo iniciar el micrófono. Prueba en Chrome o Edge.', 'bot');
-      }
-    }
+    if (reconociendo) recognition.stop();
+    else { try { recognition.start(); } catch (e) { addMessage('No se pudo iniciar el micrófono.', 'bot'); } }
   });
 } else {
-  btnMic.addEventListener('click', () => {
-    addMessage('Tu navegador no soporta reconocimiento de voz. Prueba con Chrome o Edge.', 'bot');
-  });
+  btnMic.addEventListener('click', () => addMessage('Tu navegador no soporta voz. Usa Chrome o Edge.', 'bot'));
 }
 
-// ---------- Archivos / Fotos ----------
-btnFile.addEventListener('click', () => fileInput.click());
-
-fileInput.addEventListener('change', (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  archivoSeleccionado = file;
-
-  if (file.type.startsWith('image/')) {
-    addMessage('📷 Foto lista para enviar. Escribe un mensaje o pulsa Enviar.', 'bot');
-  } else {
-    addMessage(`📄 Archivo "${file.name}" listo para enviar. Escribe un mensaje o pulsa Enviar.`, 'bot');
-  }
+// Cámara
+btnCamera.addEventListener('click', () => fileCamera.click());
+fileCamera.addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  archivoSeleccionado = f;
+  addMessage('📷 Foto tomada. Escribe algo o pulsa Enviar.', 'bot');
 });
 
-// ---------- Mensaje de bienvenida ----------
+// Galería
+btnGallery.addEventListener('click', () => fileGallery.click());
+fileGallery.addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  archivoSeleccionado = f;
+  addMessage('🖼️ Foto de galería lista. Escribe algo o pulsa Enviar.', 'bot');
+});
+
+// Documento
+btnFile.addEventListener('click', () => fileDoc.click());
+fileDoc.addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  archivoSeleccionado = f;
+  addMessage(`📄 Archivo "${f.name}" listo. Escribe algo o pulsa Enviar.`, 'bot');
+});
+
+mensajeBienvenida();
 addMessage(
   '¡Hola! Soy IA TODO.\n\nPuedo ayudarte con casi cualquier cosa, recibir fotos y documentos, y escucharte por micrófono.\n\n¿En qué te ayudo?',
   'bot'
