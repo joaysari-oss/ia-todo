@@ -1,4 +1,4 @@
-// IA TODO - Frontend con historial en sidebar + Gemini
+// IA TODO - Frontend con historial en sidebar + Gemini + Opción de Eliminar Chat
 const chat = document.getElementById('chat');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('send');
@@ -91,7 +91,7 @@ function createNewChat() {
   input.focus();
 }
 
-// Renderizar la lista del historial en la barra lateral
+// Renderizar la lista del historial en la barra lateral con botón para eliminar
 function renderSidebar() {
   if (!chatListContainer) return;
   chatListContainer.innerHTML = '';
@@ -101,12 +101,42 @@ function renderSidebar() {
     item.className = `chat-item ${c.id === currentChatId ? 'active' : ''}`;
     
     const titleSpan = document.createElement('span');
+    titleSpan.className = 'chat-title';
     titleSpan.textContent = c.title || 'Nuevo Chat';
-    item.appendChild(titleSpan);
+    titleSpan.addEventListener('click', () => loadChat(c.id));
 
-    item.addEventListener('click', () => loadChat(c.id));
+    // Botón para eliminar chat (caneca)
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-delete-chat';
+    deleteBtn.innerHTML = '🗑️️';
+    deleteBtn.title = 'Eliminar conversación';
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteChat(c.id);
+    });
+
+    item.appendChild(titleSpan);
+    item.appendChild(deleteBtn);
     chatListContainer.appendChild(item);
   });
+}
+
+// Función para borrar conversacion
+function deleteChat(id) {
+  if (!confirm('¿Deseas eliminar este chat del historial?')) return;
+
+  chats = chats.filter(c => c.id !== id);
+  saveChats();
+
+  if (currentChatId === id) {
+    if (chats.length > 0) {
+      loadChat(chats[0].id);
+    } else {
+      createNewChat();
+    }
+  } else {
+    renderSidebar();
+  }
 }
 
 function loadChat(id) {
