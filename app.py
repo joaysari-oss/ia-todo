@@ -30,7 +30,6 @@ def chat():
 
     resultado = preguntar(mensaje, ruta_archivo=ruta_archivo, historial=historial)
 
-    # Compatibilidad: si devuelve string (versión antigua) o dict (nueva)
     if isinstance(resultado, dict):
         return jsonify({
             "respuesta": resultado.get("respuesta", ""),
@@ -41,6 +40,20 @@ def chat():
             "respuesta": resultado,
             "modo_creador": False
         })
+
+@app.route("/generar_titulo", methods=["POST"])
+def generar_titulo():
+    data = request.get_json() or {}
+    mensaje = data.get("mensaje", "")
+    if not mensaje:
+        return jsonify({"titulo": "Nuevo Chat"})
+    
+    # Pedir un título corto a la IA basado en la primera pregunta
+    prompt_titulo = f"Genera un título muy corto (máximo 4 palabras) y descriptivo para un chat que empieza con esta pregunta: '{mensaje}'. Devuelve SOLO el título, sin comillas ni puntos."
+    resultado = preguntar(prompt_titulo)
+    
+    titulo = resultado.get("respuesta", "Nuevo Chat") if isinstance(resultado, dict) else resultado
+    return jsonify({"titulo": titulo.strip()})
 
 if __name__ == "__main__":
     app.run(debug=True)
