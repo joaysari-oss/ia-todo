@@ -1,5 +1,4 @@
 import os
-import json
 from google import genai
 
 client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
@@ -44,7 +43,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                 text = item.get("content", "")
                 if not text:
                     continue
-                gemini_role = "user" if role == "user" else "model"
+                gemini_role = "user" if role in ["user", "human"] else "model"
                 contents.append({
                     "role": gemini_role,
                     "parts": [{"text": text}]
@@ -53,7 +52,6 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         # Mensaje + archivo actual
         parts = []
 
-        # Si hay archivo y poco o ningún texto, forzar análisis
         if ruta_archivo and os.path.exists(ruta_archivo):
             if not mensaje:
                 nombre = os.path.basename(ruta_archivo).lower()
@@ -91,37 +89,11 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                 pass
 
         texto = response.text.strip() if response.text else ""
-        if not texto or len(texto) < 3:
-            return {"respuesta": respuesta_de_emergencia(mensaje), "modo_creador": False}
+        if not texto:
+            return {"respuesta": "No pude procesar la respuesta en este momento. Por favor intenta de nuevo.", "modo_creador": False}
 
         return {"respuesta": texto, "modo_creador": False}
 
     except Exception as e:
         print(f"[Error cerebro]: {e}")
-        return {"respuesta": respuesta_de_emergencia(mensaje), "modo_creador": False}
-
-
-def respuesta_de_emergencia(mensaje_usuario):
-    n = (mensaje_usuario or "").lower()
-
-    if any(p in n for p in ["quien te creo", "quién te creó", "quien es tu creador",
-                            "quién es tu creador", "quien te hizo", "quien te programo",
-                            "quién te programó", "tu creador"]):
-        return "Mi creador es Joao. No puedo dar más información sobre él."
-
-    if any(p in n for p in ["hola", "hey", "buenas", "buenos días", "buenas tardes"]):
-        return "¡Hola! Soy IA TODO. Estoy en modo de respaldo temporal. ¿En qué te puedo ayudar?"
-
-    if os.path.exists("noticias.txt"):
-        try:
-            with open("noticias.txt", "r", encoding="utf-8") as f:
-                texto = f.read().strip()
-            if texto:
-                return f"[Modo respaldo temporal]\n\n{texto}"
-        except:
-            pass
-
-    return (
-        "Lo siento, en este momento no puedo acceder a toda mi capacidad. "
-        "Estoy en modo de respaldo. Intenta de nuevo en unos minutos."
-    )
+        return {"respuesta": f"Hubo una falla al conectar con la IA: {str(e)}", "modo_creador": False}
