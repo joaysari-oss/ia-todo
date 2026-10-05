@@ -1,4 +1,4 @@
-// IA TODO - Frontend con historial + Modo Creador
+// IA TODO - Frontend con historial en sidebar + Gemini
 const chat = document.getElementById('chat');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('send');
@@ -13,9 +13,21 @@ const fileCamera = document.getElementById('fileCamera');
 const fileGallery = document.getElementById('fileGallery');
 const fileDoc = document.getElementById('fileDoc');
 
+// Elementos del Historial / Sidebar
+const sidebar = document.getElementById('sidebar');
+const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+const chatListContainer = document.getElementById('chatList');
+
 let reconociendo = false;
 let archivoSeleccionado = null;
-let historial = []; // Memoria de la conversación
+
+// Estructura de chats cargada desde localStorage
+let chats = JSON.parse(localStorage.getItem('ia_todo_chats') || '[]');
+let currentChatId = null;
+
+function saveChats() {
+  localStorage.setItem('ia_todo_chats', JSON.stringify(chats));
+}
 
 function scrollBottom() { chat.scrollTop = chat.scrollHeight; }
 
@@ -64,10 +76,10 @@ function mensajeBienvenida() {
   addMessage('¡Hola! Soy IA TODO.\n\nPuedo ayudarte con cualquier tema, recibir fotos, documentos y escucharte por micrófono.\n\n¿En qué te ayudo?', 'bot');
 }
 
-// Nuevo chat → limpia historial
-btnNewChat.addEventListener('click', () => {
+// Inicializar un nuevo chat
+function createNewChat() {
+  currentChatId = Date.now().toString();
   chat.innerHTML = '';
-  historial = [];
   archivoSeleccionado = null;
   fileCamera.value = '';
   fileGallery.value = '';
@@ -75,13 +87,56 @@ btnNewChat.addEventListener('click', () => {
   input.value = '';
   input.style.height = 'auto';
   mensajeBienvenida();
+  renderSidebar();
   input.focus();
-});
+}
 
-async function enviarMensaje(texto) {
+// Renderizar la lista del historial en la barra lateral
+function renderSidebar() {
+  if (!chatListContainer) return;
+  chatListContainer.innerHTML = '';
+
+  chats.forEach(c => {
+    const item = document.createElement('div');
+    item.className = `chat-item ${c.id === currentChatId ? 'active' : ''}`;
+    
+    const titleSpan = document.createElement('span');
+    titleSpan.textContent = c.title || 'Nuevo Chat';
+    item.appendChild(titleSpan);
+
+    item.addEventListener('click', () => loadChat(c.id));
+    chatListContainer.appendChild(item);
+  });
+}
+
+function loadChat(id) {
+  const target = chats.find(c => c.id === id);
+  if (!target) return;
+
+  currentChatId = target.id;
+  chat.innerHTML = '';
+
+  if (target.messages.length === 0) {
+    mensajeBienvenida();
+  } else {
+    target.messages.forEach(m => addMessage(m.content, m.role));
+  }
+
+  renderSidebar();
+}
+
+btnNewChat.addEventListener('click', createNewChat);
+
+if (btnToggleSidebar && sidebar) {
+  btnToggleSidebar.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
+}
+
+async function enviarMensaje(texto, historialActual) {
   const formData = new FormData();
   formData.append('mensaje', texto || '');
-  formData.append('historial', JSON.stringify(historial));
+  formData.append('historial', JSON.stringify(historialActual));
 
   if (archivoSeleccionado) {
     formData.append('archivo', archivoSeleccionado);
@@ -90,17 +145,38 @@ async function enviarMensaje(texto) {
   try {
     const res = await fetch('/chat', { method: 'POST', body: formData });
     if (!res.ok) throw new Error('Error servidor');
-    const data = await res.json();
-    return data;
+    return await res.json();
   } catch (err) {
     console.error(err);
     return { respuesta: 'Hubo un problema al conectar con el cerebro. Intenta de nuevo.', modo_creador: false };
   }
 }
 
+async function generarTituloServer(primerMensaje) {
+  try {
+    const res = await fetch('/generar_titulo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mensaje: primerMensaje })
+    });
+    const data = await res.json();
+    return data.titulo || primerMensaje.substring(0, 20);
+  } catch {
+    return primerMensaje.substring(0, 20);
+  }
+}
+
 async function enviar() {
   const texto = input.value.trim();
   if (!texto && !archivoSeleccionado) return;
+
+  if (!currentChatId) createNewChat();
+
+  let activeChat = chats.find(c => c.id === currentChatId);
+  if (!activeChat) {
+    activeChat = { id: currentChatId, title: 'Nuevo Chat', messages: [] };
+    chats.unshift(activeChat);
+  }
 
   // Mostrar mensaje usuario
   if (archivoSeleccionado) {
@@ -120,9 +196,9 @@ async function enviar() {
     addMessage(texto, 'user');
   }
 
-  // Guardar en historial (solo texto)
+  const esPrimerMensaje = activeChat.messages.length === 0;
   if (texto) {
-    historial.push({ role: 'user', content: texto });
+    activeChat.messages.push({ role: 'user', content: texto });
   }
 
   input.value = '';
@@ -130,7 +206,16 @@ async function enviar() {
   sendBtn.disabled = true;
   showTyping(true);
 
-  const data = await enviarMensaje(texto);
+  // Generar título automático si es la primera pregunta
+  if (esPrimerMensaje && texto) {
+    generarTituloServer(texto).then(nuevoTitulo => {
+      activeChat.title = nuevoTitulo;
+      saveChats();
+      renderSidebar();
+    });
+  }
+
+  const data = await enviarMensaje(texto, activeChat.messages);
   const respuesta = data.respuesta || 'Sin respuesta';
   const modoCreador = data.modo_creador === true;
 
@@ -143,8 +228,8 @@ async function enviar() {
     addMessage(respuesta, 'bot');
   }
 
-  // Guardar respuesta en historial
-  historial.push({ role: 'assistant', content: respuesta });
+  activeChat.messages.push({ role: 'bot', content: respuesta });
+  saveChats();
 
   archivoSeleccionado = null;
   fileCamera.value = '';
@@ -215,4 +300,9 @@ fileDoc.addEventListener('change', e => {
   addMessage(`📄 Archivo "${f.name}" listo. Escribe algo o pulsa Enviar.`, 'bot');
 });
 
-mensajeBienvenida();
+// Cargar al inicio
+if (chats.length === 0) {
+  createNewChat();
+} else {
+  loadChat(chats[0].id);
+}
