@@ -1,35 +1,46 @@
 import os
+import json
 from flask import Flask, render_template, request, jsonify
-# Asegúrate de importar la función que tienes en tu archivo ai.brain.py
-from ai.brain import preguntar 
+from ai.brain import preguntar
 
-# Configuramos la app para que reconozca la carpeta 'interface' y 'static'
 app = Flask(__name__, template_folder='interface', static_folder='static')
+
 @app.route("/")
 def home():
     return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    # Recibimos el mensaje de texto
     mensaje = request.form.get("mensaje", "")
-    
-    # Recibimos el archivo (imagen o PDF) si el usuario lo envió
+    historial_raw = request.form.get("historial", "[]")
+
+    try:
+        historial = json.loads(historial_raw)
+    except:
+        historial = []
+
     archivo = request.files.get("archivo")
-    
     ruta_archivo = None
-    if archivo:
-        # Guardamos el archivo en una carpeta llamada 'uploads'
+
+    if archivo and archivo.filename:
         if not os.path.exists("uploads"):
             os.makedirs("uploads")
         ruta_archivo = os.path.join("uploads", archivo.filename)
         archivo.save(ruta_archivo)
 
-    # Procesamos la respuesta usando tu función de IA
-    # Nota: Asegúrate de que tu función en ai.brain.py acepte el argumento de archivo
-    respuesta = preguntar(mensaje) # Aquí puedes ajustar si necesitas pasar la ruta_archivo
-    
-    return jsonify({"respuesta": respuesta})
+    resultado = preguntar(mensaje, ruta_archivo=ruta_archivo, historial=historial)
+
+    # Compatibilidad: si devuelve string (versión antigua) o dict (nueva)
+    if isinstance(resultado, dict):
+        return jsonify({
+            "respuesta": resultado.get("respuesta", ""),
+            "modo_creador": resultado.get("modo_creador", False)
+        })
+    else:
+        return jsonify({
+            "respuesta": resultado,
+            "modo_creador": False
+        })
 
 if __name__ == "__main__":
     app.run(debug=True)
