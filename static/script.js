@@ -216,7 +216,3 @@ fileDoc.addEventListener('change', e => {
 });
 
 mensajeBienvenida();
-addMessage(
-  '¡Hola! Soy IA TODO.\n\nPuedo ayudarte con casi cualquier cosa, recibir fotos y documentos, y escucharte por micrófono.\n\n¿En qué te ayudo?',
-  'bot'
-);
