@@ -93,11 +93,40 @@
     .tool-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
     .tool-btn:hover{background:rgba(124,92,255,0.2);border-color:rgba(124,92,255,0.4);color:#fff}
     .tool-btn.recording{background:rgba(255,92,122,0.25);border-color:var(--danger);color:var(--danger);animation:pulse 1s infinite}
+    
+    /* Contenedor de la entrada con el micrófono adentro */
     .input-row{display:flex;gap:10px;align-items:flex-end}
-    .input-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 4px 4px 16px;display:flex;align-items:flex-end;transition:border-color 0.2s}
+    .input-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 8px 4px 16px;display:flex;align-items:center;gap:8px;transition:border-color 0.2s}
     .input-wrap:focus-within{border-color:rgba(124,92,255,0.5);box-shadow:0 0 0 3px rgba(124,92,255,0.15)}
     #input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:0.95rem;padding:10px 0;max-height:120px;resize:none;line-height:1.4}
     #input::placeholder{color:var(--text-muted)}
+    
+    /* Estilo exclusivo del micrófono integrado */
+    .mic-inline-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .mic-inline-btn:hover {
+      color: var(--accent);
+      background: rgba(124, 92, 255, 0.15);
+    }
+    .mic-inline-btn.recording {
+      color: var(--danger);
+      background: rgba(255, 92, 122, 0.25);
+      animation: pulse 1s infinite;
+    }
+
     #send{width:44px;height:44px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),#5a3fd4);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s,box-shadow 0.15s;flex-shrink:0}
     #send:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(124,92,255,0.4)}
     #send:active{transform:scale(0.96)}
@@ -146,15 +175,19 @@
     </div>
 
     <div class="input-area">
+      <!-- Herramientas de adjuntar (Cámara, Galería, Archivos) -->
       <div class="tools">
-        <button class="tool-btn" id="btnMic" title="Hablar">🎤</button>
         <button class="tool-btn" id="btnCamera" title="Tomar foto">📷</button>
         <button class="tool-btn" id="btnGallery" title="Subir de galería">🖼️</button>
         <button class="tool-btn" id="btnFile" title="Documento">📄</button>
       </div>
+      
+      <!-- Fila de entrada de texto + Micrófono e icon de enviar -->
       <div class="input-row">
         <div class="input-wrap">
           <textarea id="input" rows="1" placeholder="Escribe o habla..." autofocus></textarea>
+          <!-- Botón de micrófono integrado aquí adentro -->
+          <button class="mic-inline-btn" id="btnMic" title="Hablar">🎤</button>
         </div>
         <button id="send">➤</button>
       </div>
