@@ -77,7 +77,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-3.8-flash",
             contents=contents,
             config={
                 "system_instruction": INSTRUCCION_SISTEMA
