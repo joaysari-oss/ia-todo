@@ -7,185 +7,66 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     :root {
-      --bg: #0a0a12;
-      --surface: #12121e;
-      --surface2: #1a1a2a;
-      --border: rgba(255,255,255,0.08);
-      --text: #e8e8f0;
-      --text-muted: #8888a0;
-      --accent: #7c5cff;
-      --accent2: #00d4ff;
-      --success: #00e5a0;
-      --danger: #ff5c7a;
+      --bg:#0a0a12; --surface:#12121e; --surface2:#1a1a2a; --border:rgba(255,255,255,0.08);
+      --text:#e8e8f0; --text-muted:#8888a0; --accent:#7c5cff; --accent2:#00d4ff;
+      --success:#00e5a0; --danger:#ff5c7a;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      height: 100vh;
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      background: rgba(18,18,30,0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      z-index: 10;
-    }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .logo {
-      width: 42px; height: 42px; border-radius: 12px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.35rem;
-      box-shadow: 0 4px 20px rgba(124,92,255,0.35);
-    }
-    .brand-text h1 { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.3px; }
-    .brand-text p { font-size: 0.75rem; color: var(--text-muted); }
-    .status {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 0.8rem; color: var(--success);
-      background: rgba(0,229,160,0.1);
-      padding: 6px 12px; border-radius: 20px;
-      border: 1px solid rgba(0,229,160,0.2);
-    }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--success); animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-    #chat {
-      flex: 1; overflow-y: auto;
-      padding: 20px 16px 12px;
-      display: flex; flex-direction: column; gap: 16px;
-      scroll-behavior: smooth;
-    }
-    .msg {
-      max-width: 88%; display: flex; gap: 10px;
-      animation: fadeIn 0.3s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .msg.user { align-self: flex-end; flex-direction: row-reverse; }
-    .avatar {
-      width: 34px; height: 34px; border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1rem; flex-shrink: 0;
-    }
-    .msg.bot .avatar { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
-    .msg.user .avatar { background: var(--surface2); border: 1px solid var(--border); }
-    .bubble {
-      padding: 12px 16px; border-radius: 16px;
-      line-height: 1.55; font-size: 0.95rem;
-      white-space: pre-wrap; word-break: break-word;
-    }
-    .msg.bot .bubble {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-bottom-left-radius: 4px;
-    }
-    .msg.user .bubble {
-      background: linear-gradient(135deg, #5a3fd4, #7c5cff);
-      border-bottom-right-radius: 4px; color: #fff;
-    }
-    .media-preview {
-      max-width: 220px; border-radius: 10px; margin-top: 6px; display: block;
-    }
-    .file-chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255,255,255,0.08);
-      padding: 6px 10px; border-radius: 8px;
-      font-size: 0.85rem; margin-top: 4px;
-    }
-    .typing { display: none; align-self: flex-start; gap: 10px; }
-    .typing.show { display: flex; }
-    .typing .bubble {
-      display: flex; gap: 5px; padding: 14px 18px;
-      background: var(--surface); border: 1px solid var(--border);
-    }
-    .typing .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: var(--text-muted); animation: bounce 1.2s infinite;
-    }
-    .typing .dot:nth-child(2) { animation-delay: 0.15s; }
-    .typing .dot:nth-child(3) { animation-delay: 0.3s; }
-    @keyframes bounce {
-      0%,60%,100% { transform: translateY(0); }
-      30% { transform: translateY(-5px); }
-    }
-    .input-area {
-      padding: 10px 14px 16px;
-      background: rgba(18,18,30,0.95);
-      border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .tools { display: flex; gap: 8px; padding: 0 4px; }
-    .tool-btn {
-      width: 38px; height: 38px; border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text-muted);
-      font-size: 1.1rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-    }
-    .tool-btn:hover {
-      background: rgba(124,92,255,0.2);
-      border-color: rgba(124,92,255,0.4);
-      color: #fff;
-    }
-    .tool-btn.recording {
-      background: rgba(255,92,122,0.25);
-      border-color: var(--danger);
-      color: var(--danger);
-      animation: pulse 1s infinite;
-    }
-    .input-row { display: flex; gap: 10px; align-items: flex-end; }
-    .input-wrap {
-      flex: 1; background: var(--surface);
-      border: 1px solid var(--border); border-radius: 14px;
-      padding: 4px 4px 4px 16px;
-      display: flex; align-items: flex-end;
-      transition: border-color 0.2s;
-    }
-    .input-wrap:focus-within {
-      border-color: rgba(124,92,255,0.5);
-      box-shadow: 0 0 0 3px rgba(124,92,255,0.15);
-    }
-    #input {
-      flex: 1; background: transparent; border: none; outline: none;
-      color: var(--text); font-family: inherit; font-size: 0.95rem;
-      padding: 10px 0; max-height: 120px; resize: none; line-height: 1.4;
-    }
-    #input::placeholder { color: var(--text-muted); }
-    #send {
-      width: 44px; height: 44px; border-radius: 12px; border: none;
-      background: linear-gradient(135deg, var(--accent), #5a3fd4);
-      color: #fff; font-size: 1.2rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform 0.15s, box-shadow 0.15s; flex-shrink: 0;
-    }
-    #send:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(124,92,255,0.4); }
-    #send:active { transform: scale(0.96); }
-    #send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    #chat::-webkit-scrollbar { width: 6px; }
-    #chat::-webkit-scrollbar-track { background: transparent; }
-    #chat::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-    #fileInput { display: none; }
-    @media (max-width: 500px) {
-      .msg { max-width: 92%; }
-      header { padding: 12px 14px; }
-      .brand-text h1 { font-size: 1rem; }
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(18,18,30,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:10}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.35rem;box-shadow:0 4px 20px rgba(124,92,255,0.35)}
+    .brand-text h1{font-size:1.15rem;font-weight:700}
+    .brand-text p{font-size:0.75rem;color:var(--text-muted)}
+    .header-right{display:flex;align-items:center;gap:10px}
+    .btn-new{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text-muted);padding:7px 14px;border-radius:10px;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.2s}
+    .btn-new:hover{background:rgba(124,92,255,0.2);border-color:rgba(124,92,255,0.4);color:#fff}
+    .creator-badge{display:none;align-items:center;gap:6px;font-size:0.78rem;color:#ffd700;background:rgba(255,215,0,0.12);padding:5px 11px;border-radius:20px;border:1px solid rgba(255,215,0,0.35)}
+    .creator-badge.show{display:flex}
+    .status{display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--success);background:rgba(0,229,160,0.1);padding:6px 12px;border-radius:20px;border:1px solid rgba(0,229,160,0.2)}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    #chat{flex:1;overflow-y:auto;padding:20px 16px 12px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+    .msg{max-width:88%;display:flex;gap:10px;animation:fadeIn 0.3s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .msg.user{align-self:flex-end;flex-direction:row-reverse}
+    .avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+    .msg.bot .avatar{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+    .msg.user .avatar{background:var(--surface2);border:1px solid var(--border)}
+    .bubble{padding:12px 16px;border-radius:16px;line-height:1.55;font-size:0.95rem;white-space:pre-wrap;word-break:break-word}
+    .msg.bot .bubble{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
+    .msg.user .bubble{background:linear-gradient(135deg,#5a3fd4,#7c5cff);border-bottom-right-radius:4px;color:#fff}
+    .msg.system .bubble{background:rgba(0,229,160,0.08);border:1px solid rgba(0,229,160,0.25);color:var(--success);font-size:0.88rem;text-align:center;max-width:100%}
+    .msg.system{align-self:center;max-width:90%}
+    .msg.system .avatar{display:none}
+    .media-preview{max-width:220px;border-radius:10px;margin-top:6px;display:block}
+    .file-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);padding:6px 10px;border-radius:8px;font-size:0.85rem;margin-top:4px}
+    .typing{display:none;align-self:flex-start;gap:10px}
+    .typing.show{display:flex}
+    .typing .bubble{display:flex;gap:5px;padding:14px 18px;background:var(--surface);border:1px solid var(--border)}
+    .typing .dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);animation:bounce 1.2s infinite}
+    .typing .dot:nth-child(2){animation-delay:0.15s}
+    .typing .dot:nth-child(3){animation-delay:0.3s}
+    @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+    .input-area{padding:10px 14px 16px;background:rgba(18,18,30,0.95);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+    .tools{display:flex;gap:8px;padding:0 4px}
+    .tool-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+    .tool-btn:hover{background:rgba(124,92,255,0.2);border-color:rgba(124,92,255,0.4);color:#fff}
+    .tool-btn.recording{background:rgba(255,92,122,0.25);border-color:var(--danger);color:var(--danger);animation:pulse 1s infinite}
+    .input-row{display:flex;gap:10px;align-items:flex-end}
+    .input-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 4px 4px 16px;display:flex;align-items:flex-end;transition:border-color 0.2s}
+    .input-wrap:focus-within{border-color:rgba(124,92,255,0.5);box-shadow:0 0 0 3px rgba(124,92,255,0.15)}
+    #input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:0.95rem;padding:10px 0;max-height:120px;resize:none;line-height:1.4}
+    #input::placeholder{color:var(--text-muted)}
+    #send{width:44px;height:44px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),#5a3fd4);color:#fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform 0.15s,box-shadow 0.15s;flex-shrink:0}
+    #send:hover{transform:scale(1.05);box-shadow:0 4px 16px rgba(124,92,255,0.4)}
+    #send:active{transform:scale(0.96)}
+    #send:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+    #chat::-webkit-scrollbar{width:6px}
+    #chat::-webkit-scrollbar-track{background:transparent}
+    #chat::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:3px}
+    #fileCamera,#fileGallery,#fileDoc{display:none}
+    @media(max-width:500px){.msg{max-width:92%}header{padding:12px 14px}.brand-text h1{font-size:1rem}.btn-new{padding:6px 10px;font-size:0.75rem}}
   </style>
 </head>
 <body>
@@ -196,10 +77,11 @@
         <h1>IA TODO</h1>
         <p>Asistente de Joao</p>
       </div>
+      <div class="creator-badge" id="creatorBadge">✦ Modo Creador</div>
     </div>
-    <div class="status">
-      <div class="status-dot"></div>
-      En línea
+    <div class="header-right">
+      <button class="btn-new" id="btnNewChat">+ Nuevo chat</button>
+      <div class="status"><div class="status-dot"></div> En línea</div>
     </div>
   </header>
 
@@ -207,28 +89,28 @@
 
   <div class="typing" id="typing">
     <div class="avatar">∞</div>
-    <div class="bubble">
-      <div class="dot"></div>
-      <div class="dot"></div>
-      <div class="dot"></div>
-    </div>
+    <div class="bubble"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
   </div>
 
   <div class="input-area">
     <div class="tools">
-      <button class="tool-btn" id="btnMic" title="Hablar (voz a texto) — Mejor en Chrome/Edge">🎤</button>
-      <button class="tool-btn" id="btnFile" title="Enviar foto o documento">📁</button>
+      <button class="tool-btn" id="btnMic" title="Hablar">🎤</button>
+      <button class="tool-btn" id="btnCamera" title="Tomar foto">📷</button>
+      <button class="tool-btn" id="btnGallery" title="Subir de galería">🖼️</button>
+      <button class="tool-btn" id="btnFile" title="Documento">📄</button>
     </div>
     <div class="input-row">
       <div class="input-wrap">
         <textarea id="input" rows="1" placeholder="Escribe o habla..." autofocus></textarea>
       </div>
-      <button id="send" title="Enviar">➤</button>
+      <button id="send">➤</button>
     </div>
   </div>
 
-  <input type="file" id="fileInput" accept="image/*,application/pdf,.txt,.md,.csv,.json" />
+  <input type="file" id="fileCamera" accept="image/*" capture="environment" />
+  <input type="file" id="fileGallery" accept="image/*" />
+  <input type="file" id="fileDoc" accept="application/pdf,.txt,.md,.csv,.json" />
 
-<script src="/static/script.js"></script>
+  <script src="/static/script.js"></script>
 </body>
 </html>
