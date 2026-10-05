@@ -2,7 +2,7 @@ import os
 import json
 from google import genai
 
-client = genai.Client()
+client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
 
 INSTRUCCION_SISTEMA = (
     "Eres IA TODO, un asistente de inteligencia artificial avanzado, útil, claro, sincero y capaz de responder sobre cualquier tema. "
@@ -77,7 +77,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.0-flash",
             contents=contents,
             config={
                 "system_instruction": INSTRUCCION_SISTEMA
