@@ -22,10 +22,11 @@ INSTRUCCION_SISTEMA = (
 
 CODIGO_SECRETO = "creador_joao_777"
 
+
 def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
     mensaje = (mensaje_usuario or "").strip()
 
-    # Verificación del código de creador
+    # Código de creador
     if mensaje == CODIGO_SECRETO:
         return {
             "respuesta": (
@@ -39,7 +40,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
     try:
         contents = []
 
-        # Cargar historial
+        # Historial (últimas 12 interacciones)
         if historial and isinstance(historial, list):
             for item in historial[-12:]:
                 role = item.get("role", "user")
@@ -54,14 +55,20 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
 
         parts = []
 
-        # Procesar archivos adjuntos
+        # Archivos (foto / documento)
         if ruta_archivo and os.path.exists(ruta_archivo):
             if not mensaje:
                 nombre = os.path.basename(ruta_archivo).lower()
-                if any(nombre.endswith(ext) for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp']):
-                    mensaje = "Analiza esta imagen en detalle. Describe todo lo que ves, lee cualquier texto que aparezca y dame la información más útil."
+                if any(nombre.endswith(ext) for ext in [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"]):
+                    mensaje = (
+                        "Analiza esta imagen en detalle. Describe todo lo que ves, "
+                        "lee cualquier texto que aparezca y dame la información más útil."
+                    )
                 else:
-                    mensaje = "Analiza este documento. Resume su contenido y extrae la información más importante."
+                    mensaje = (
+                        "Analiza este documento. Resume su contenido y extrae "
+                        "la información más importante."
+                    )
 
             with open(ruta_archivo, "rb") as f:
                 archivo_subido = client.files.upload(file=f)
@@ -76,13 +83,15 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        # Modelo oficial
-        modelos = ["models/gemini-3.8-flash"]
-        response = None
+        # Solo el modelo que te funciona
+        modelos = ["gemini-3.8-flash"]
 
-        # Configuración para el backoff progresivo (pausas entre reintentos)
-        MAX_INTENTOS = 4
-        TIEMPO_BASE = 2.0  # Tiempo base en segundos
+        # Pocos reintentos para no gastar cuota del plan gratis
+        MAX_INTENTOS = 2
+        TIEMPO_BASE = 1.0
+
+        response = None
+        ultimo_error = None
 
         for nombre_modelo in modelos:
             for intento in range(MAX_INTENTOS):
@@ -90,40 +99,68 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                     response = client.models.generate_content(
                         model=nombre_modelo,
                         contents=contents,
-                        config={
-                            "system_instruction": INSTRUCCION_SISTEMA
-                        }
+                        config={"system_instruction": INSTRUCCION_SISTEMA},
                     )
-                    if response and response.text:
+                    if response and getattr(response, "text", None):
                         break
 
                 except APIError as err:
-                    print(f"[Intento {intento + 1}/{MAX_INTENTOS} en {nombre_modelo}] Error API: {err}")
+                    ultimo_error = str(err)
+                    print(f"[Intento {intento + 1}/{MAX_INTENTOS}] APIError: {err}")
+                    # Si es cuota (429), no reintentar mucho
+                    if "429" in str(err) or "RESOURCE_EXHAUSTED" in str(err).upper():
+                        break
                     if intento < MAX_INTENTOS - 1:
-                        espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.5, 1.5)
-                        print(f"Esperando {espera:.2f}s antes de reintentar...")
+                        espera = TIEMPO_BASE * (2 ** intento) + random.uniform(0.3, 0.8)
                         time.sleep(espera)
 
                 except Exception as err:
-                    print(f"[Intento {intento + 1}/{MAX_INTENTOS} en {nombre_modelo}] Error inesperado: {err}")
+                    ultimo_error = str(err)
+                    print(f"[Intento {intento + 1}/{MAX_INTENTOS}] Error: {err}")
                     if intento < MAX_INTENTOS - 1:
-                        espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.5, 1.5)
-                        time.sleep(espera)
+                        time.sleep(TIEMPO_BASE)
 
-            if response and response.text:
+            if response and getattr(response, "text", None):
                 break
 
-        if response and response.text:
-            return {"respuesta": response.text, "modo_creador": False}
+        # Limpiar archivo temporal
+        if ruta_archivo and os.path.exists(ruta_archivo):
+            try:
+                os.remove(ruta_archivo)
+            except Exception:
+                pass
 
-        return {
-            "respuesta": "La cuota o servicio de Gemini no respondió en este momento. Intenta de nuevo en unos momentos.",
-            "modo_creador": False
-        }
+        if response and getattr(response, "text", None):
+            return {"respuesta": response.text.strip(), "modo_creador": False}
+
+        # Mensajes claros según el error
+        err = (ultimo_error or "").lower()
+        if "429" in err or "resource_exhausted" in err or "quota" in err:
+            msg = (
+                "He alcanzado el límite temporal del plan gratuito de Gemini. "
+                "Espera 1 o 2 minutos y vuelve a intentarlo."
+            )
+        elif "503" in err or "unavailable" in err:
+            msg = (
+                "Gemini está saturado en este momento. "
+                "Intenta de nuevo en unos minutos."
+            )
+        elif "404" in err or "not found" in err:
+            msg = (
+                "El modelo no está disponible con esta clave. "
+                "Revisa el nombre del modelo en la configuración."
+            )
+        else:
+            msg = (
+                "No pude obtener respuesta de Gemini ahora mismo. "
+                "Espera un momento e inténtalo de nuevo."
+            )
+
+        return {"respuesta": msg, "modo_creador": False}
 
     except Exception as e:
         print(f"[Error general brain]: {e}")
         return {
-            "respuesta": "Ocurrió un problema temporal al procesar la solicitud.",
-            "modo_creador": False
+            "respuesta": "Ocurrió un problema temporal al procesar la solicitud. Intenta de nuevo.",
+            "modo_creador": False,
         }
