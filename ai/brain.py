@@ -74,11 +74,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        response = client.models.generate_content(
-            model="gemini-3.8-flash",
-            contents=contents,
-            config={
-# Lista de modelos a intentar en orden si uno falla por límite o 503
+        # Lista de modelos a intentar en orden si uno falla por límite (429) o sobrecarga (503)
         modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
         response = None
         ultimo_error = None
@@ -93,14 +89,23 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                     }
                 )
                 if response and response.text:
-                    break # Si respondió con éxito, salimos del bucle
+                    break  # Si respondió con éxito, salimos del bucle
             except Exception as err:
                 print(f"[Aviso modelo {nombre_modelo} falló]: {err}")
                 ultimo_error = err
                 continue
 
-        if not response or not response.text:
-            return {
-                "respuesta": f"Los servidores de Gemini están sobrecargados o se agotó el límite gratuito momentáneamente. Intenta de nuevo en unos minutos.",
-                "modo_creador": False
-            }
+        if response and response.text:
+            return {"respuesta": response.text, "modo_creador": False}
+
+        return {
+            "respuesta": "Los servidores de Gemini están sobrecargados o se agotó el límite gratuito momentáneamente. Intenta de nuevo en unos minutos.",
+            "modo_creador": False
+        }
+
+    except Exception as e:
+        print(f"[Error brain]: {e}")
+        return {
+            "respuesta": "Ocurrió un error inesperado al procesar la solicitud.",
+            "modo_creador": False
+        }
