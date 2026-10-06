@@ -23,7 +23,6 @@ CODIGO_SECRETO = "creador_joao_777"
 def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
     mensaje = (mensaje_usuario or "").strip()
 
-    # Código de creador
     if mensaje == CODIGO_SECRETO:
         return {
             "respuesta": (
@@ -37,7 +36,6 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
     try:
         contents = []
 
-        # Historial de conversación
         if historial and isinstance(historial, list):
             for item in historial[-12:]:
                 role = item.get("role", "user")
@@ -50,7 +48,6 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                     "parts": [{"text": text}]
                 })
 
-        # Mensaje + archivo actual
         parts = []
 
         if ruta_archivo and os.path.exists(ruta_archivo):
@@ -75,8 +72,8 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        # Modelos válidos con prefijo 'models/'
-        modelos = ["models/gemini-1.5-flash", "models/gemini-1.5-pro"]
+        # Modelos con fallback automático
+        modelos = ["models/gemini-2.5-flash", "models/gemini-1.5-flash", "models/gemini-1.5-pro"]
         response = None
 
         for nombre_modelo in modelos:
@@ -92,7 +89,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                     if response and response.text:
                         break
                 except Exception as err:
-                    print(f"[Intento {intento+1} en modelo {nombre_modelo} falló]: {err}")
+                    print(f"[Intento {intento+1} en {nombre_modelo}]: {err}")
                     time.sleep(1)
 
             if response and response.text:
