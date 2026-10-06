@@ -1,4 +1,5 @@
 import os
+import time
 from google import genai
 
 client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
@@ -74,38 +75,41 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        # Lista de modelos a intentar en orden si uno falla por límite (429) o sobrecarga (503)
-        modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash" "gemini-3.8-flash"]
+        # Cadena de modelos probados para maximizar disponibilidad
+        modelos = ["gemini-1.5-flash-8b", "gemini-1.5-flash", "gemini-1.5-pro"]
         response = None
-        ultimo_error = None
 
         for nombre_modelo in modelos:
-            try:
-                response = client.models.generate_content(
-                    model=nombre_modelo,
-                    contents=contents,
-                    config={
-                        "system_instruction": INSTRUCCION_SISTEMA
-                    }
-                )
-                if response and response.text:
-                    break  # Si respondió con éxito, salimos del bucle
-            except Exception as err:
-                print(f"[Aviso modelo {nombre_modelo} falló]: {err}")
-                ultimo_error = err
-                continue
+            # Reintentamos hasta 2 veces por modelo con una pequeña pausa
+            for intento in range(2):
+                try:
+                    response = client.models.generate_content(
+                        model=nombre_modelo,
+                        contents=contents,
+                        config={
+                            "system_instruction": INSTRUCCION_SISTEMA
+                        }
+                    )
+                    if response and response.text:
+                        break
+                except Exception as err:
+                    print(f"[Intento {intento+1} en modelo {nombre_modelo} falló]: {err}")
+                    time.sleep(1.5)  # Pausa de 1.5s antes de reintentar si la API rechazó por velocidad
+            
+            if response and response.text:
+                break
 
         if response and response.text:
             return {"respuesta": response.text, "modo_creador": False}
 
         return {
-            "respuesta": "Los servidores de Gemini están sobrecargados o se agotó el límite gratuito momentáneamente. Intenta de nuevo en unos minutos.",
+            "respuesta": "La cuota gratuita de Gemini alcanzó su límite por un momento. Espera un minuto y vuelve a enviar tu pregunta.",
             "modo_creador": False
         }
 
     except Exception as e:
-        print(f"[Error brain]: {e}")
+        print(f"[Error general brain]: {e}")
         return {
-            "respuesta": "Ocurrió un error inesperado al procesar la solicitud.",
+            "respuesta": "Ocurrió un problema temporal al procesar la solicitud.",
             "modo_creador": False
         }
