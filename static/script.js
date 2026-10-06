@@ -1,41 +1,5 @@
 // IA TODO - Frontend con historial en sidebar + Gemini + Opción de Eliminar Chat + Botón Colapsar Sidebar
 
-// Inyectar estilos CSS para la caneca de eliminar chats
-if (!document.getElementById('css-caneca')) {
-  const style = document.createElement('style');
-  style.id = 'css-caneca';
-  style.textContent = `
-    .chat-item {
-      display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-    }
-    .chat-title {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-right: 8px;
-    }
-    .btn-delete-chat {
-      background: transparent;
-      border: none;
-      font-size: 0.9rem;
-      cursor: pointer;
-      opacity: 0.7;
-      padding: 2px 4px;
-      border-radius: 4px;
-      transition: all 0.2s;
-    }
-    .btn-delete-chat:hover {
-      opacity: 1;
-      transform: scale(1.2);
-      background: rgba(255, 92, 122, 0.2);
-    }
-  `;
-  document.head.appendChild(style);
-}
-
 const chat = document.getElementById('chat');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('send');
@@ -130,7 +94,7 @@ function createNewChat() {
   input.focus();
 }
 
-// Renderizar la lista del historial en la barra lateral con botón para eliminar
+// Renderizar la lista del historial en la barra lateral con botón para eliminar 🗑️
 function renderSidebar() {
   if (!chatListContainer) return;
   chatListContainer.innerHTML = '';
@@ -147,7 +111,7 @@ function renderSidebar() {
     // Botón para eliminar chat (caneca)
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-delete-chat';
-    deleteBtn.innerHTML = '🗑';
+    deleteBtn.innerHTML = '🗑️';
     deleteBtn.title = 'Eliminar conversación';
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -371,7 +335,7 @@ btnGallery.addEventListener('click', () => fileGallery.click());
 fileGallery.addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
   archivoSeleccionado = f;
-  addMessage('🖼️️ Foto de galería lista. Escribe algo o pulsa Enviar.', 'bot');
+  addMessage('🖼️ Foto de galería lista. Escribe algo o pulsa Enviar.', 'bot');
 });
 
 // Documento
