@@ -81,14 +81,13 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         prompt_musica = optimizar_prompt_ingles(mensaje, tipo="musica")
         prompt_encoded = urllib.parse.quote(prompt_musica)
         
+        # Enlace directo para reproducción y descarga
         url_audio = f"https://image.pollinations.ai/prompt/{prompt_encoded}?model=audio"
 
         respuesta_markdown = (
-            f"🎵 **¡He creado esta muestra de audio/música para ti!** *(duración approx. 10 a 30 seg)*\n\n"
-            f"Escucha tu creación aquí:\n"
-            f"<audio controls src=\"{url_audio}\"></audio>\n\n"
-            f"---  \n"
-            f"[📥 Descargar archivo de audio]({url_audio})"
+            f"🎵 **Muestra de audio generada:** *(duración approx. 10 a 30 seg)*\n\n"
+            f"Haz clic aquí para escuchar o descargar la pista directamente:\n\n"
+            f"🎧 [▶ Escuchar / Descargar Audio]({url_audio})"
         )
         return {"respuesta": respuesta_markdown, "modo_creador": False}
 
