@@ -23,6 +23,7 @@ CODIGO_SECRETO = "creador_joao_777"
 def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
     mensaje = (mensaje_usuario or "").strip()
 
+    # Verificación del código de creador
     if mensaje == CODIGO_SECRETO:
         return {
             "respuesta": (
@@ -36,6 +37,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
     try:
         contents = []
 
+        # Cargar historial
         if historial and isinstance(historial, list):
             for item in historial[-12:]:
                 role = item.get("role", "user")
@@ -50,6 +52,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
 
         parts = []
 
+        # Procesar archivos adjuntos
         if ruta_archivo and os.path.exists(ruta_archivo):
             if not mensaje:
                 nombre = os.path.basename(ruta_archivo).lower()
@@ -72,8 +75,8 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        # Modelos con fallback automático
-        modelos = ["models/gemini-2.5-flash", "models/gemini-1.5-flash", "models/gemini-1.5-pro"]
+        # Modelo actualizado a la versión actual con el prefijo 'models/'
+        modelos = ["models/gemini-3.8-flash"]
         response = None
 
         for nombre_modelo in modelos:
