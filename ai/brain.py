@@ -52,12 +52,16 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if len(messages) == 1:
             return {"respuesta": "No recibí ningún mensaje.", "modo_creador": False}
 
-        # Lista de modelos válidos en Groq
-        modelos = ["llama-3.1-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"]
+        # Modelos activos en Groq
+        modelos = [
+            "llama-3.3-70b-versatile",
+            "openai/gpt-oss-120b",
+            "openai/gpt-oss-20b"
+        ]
+        
         response = None
-
         MAX_INTENTOS = 2
-        TIEMPO_BASE = 1.0
+        TIEMPO_BASE = 0.8
 
         for nombre_modelo in modelos:
             for intento in range(MAX_INTENTOS):
@@ -71,9 +75,9 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                         response = chat_completion.choices[0].message.content
                         break
                 except Exception as err:
-                    print(f"[Intento {intento + 1}/{MAX_INTENTOS} en {nombre_modelo}]: {err}")
+                    print(f"[Error en {nombre_modelo} - Intento {intento + 1}]: {err}")
                     if intento < MAX_INTENTOS - 1:
-                        espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.2, 0.8)
+                        espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.1, 0.4)
                         time.sleep(espera)
 
             if response:
