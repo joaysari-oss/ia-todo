@@ -77,7 +77,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
         # Nombres de modelos actualizados para el SDK genai de Google
-        modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+     models/"gemini-3.8-flash"
         response = None
 
         for nombre_modelo in modelos:
