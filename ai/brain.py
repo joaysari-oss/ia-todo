@@ -7,8 +7,8 @@ from groq import Groq
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 INSTRUCCION_SISTEMA = (
-    "Eres IA TODO, un asistente de inteligencia artificial avanzado, útil, claro, sincero y capaz de responder sobre cualquier tema, "
-    "crear imágenes y generar muestras de música. "
+    "Eres IA TODO, un asistente de inteligencia artificial avanzado, útil, claro, sincero y capaz de responder sobre cualquier tema "
+    "y crear imágenes de alta resolución. "
     "Tu creador y programador principal es Joao. "
     "Cuando te pregunten quién te creó, quién es tu creador, quién te programó o de quién eres, "
     "responde únicamente: 'Mi creador es Joao. No puedo dar más información sobre él.' "
@@ -21,24 +21,17 @@ INSTRUCCION_SISTEMA = (
 
 CODIGO_SECRETO = "creador_joao_777"
 
-def optimizar_prompt_ingles(descripcion_usuario, tipo="imagen"):
+def optimizar_prompt_ingles(descripcion_usuario):
     """
     Traduce y optimiza la solicitud del usuario al inglés 
-    para obtener la mejor calidad en imagen o música.
+    para obtener la mejor calidad en la generación de imágenes.
     """
     try:
-        if tipo == "musica":
-            prompt_system = (
-                "You are an expert AI music prompt generator. Convert the user's request "
-                "into a detailed musical audio prompt in English (genre, instruments, tempo, mood, rhythm). "
-                "Return ONLY the English description, nothing else."
-            )
-        else:
-            prompt_system = (
-                "You are an expert AI image prompt generator. Convert the user's request "
-                "into a detailed visual prompt in English for image generation models. "
-                "Return ONLY the English prompt, nothing else."
-            )
+        prompt_system = (
+            "You are an expert AI image prompt generator. Convert the user's request "
+            "into a detailed visual prompt in English for image generation models. "
+            "Return ONLY the English prompt, nothing else."
+        )
 
         completion = client.chat.completions.create(
             messages=[
@@ -51,7 +44,7 @@ def optimizar_prompt_ingles(descripcion_usuario, tipo="imagen"):
         if completion and completion.choices:
             return completion.choices[0].message.content.strip()
     except Exception as e:
-        print(f"[Error optimizando prompt de {tipo}]: {e}")
+        print(f"[Error optimizando prompt de imagen]: {e}")
     return descripcion_usuario
 
 def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
@@ -63,42 +56,21 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             "respuesta": (
                 "✦ Código de creador verificado.\n\n"
                 "¡Bienvenido de vuelta, Joao!\n\n"
-                "Es un honor recibirte. Estoy listo para responder preguntas, generar imágenes de alta definición "
-                "y crear fragmentos de música o audio. ¿En qué puedo ayudarte hoy, creador?"
+                "Es un honor recibirte. Estoy listo para responder preguntas y generar imágenes de alta definición. "¿En qué puedo ayudarte hoy, creador?"
             ),
             "modo_creador": True
         }
 
     mensaje_lower = mensaje.lower()
 
-    # 1. DETECCIÓN DE GENERACIÓN DE MÚSICA / AUDIO
-    palabras_clave_musica = [
-        "genera música", "generar música", "crea una canción", "crear música",
-        "haz una pista", "haz una canción", "crea un audio", "genera un audio",
-        "haz música", "compón una canción", "crea ritmo de"
-    ]
-    if any(p in mensaje_lower for p in palabras_clave_musica):
-        prompt_musica = optimizar_prompt_ingles(mensaje, tipo="musica")
-        prompt_encoded = urllib.parse.quote(prompt_musica)
-        
-        # Enlace directo para reproducción y descarga
-        url_audio = f"https://image.pollinations.ai/prompt/{prompt_encoded}?model=audio"
-
-        respuesta_markdown = (
-            f"🎵 **Muestra de audio generada:** *(duración approx. 10 a 30 seg)*\n\n"
-            f"Haz clic aquí para escuchar o descargar la pista directamente:\n\n"
-            f"🎧 [▶ Escuchar / Descargar Audio]({url_audio})"
-        )
-        return {"respuesta": respuesta_markdown, "modo_creador": False}
-
-    # 2. DETECCIÓN DE GENERACIÓN DE IMÁGENES
+    # 1. DETECCIÓN DE GENERACIÓN DE IMÁGENES
     palabras_clave_imagen = [
         "genera una imagen", "generar una imagen", "crea una imagen", "crear una imagen",
         "dibuja", "haz una imagen", "haz un dibujo", "dibuja un", "dibuja una",
         "imagen de", "foto de", "hazme un dibujo", "muéstrame una imagen de"
     ]
     if any(p in mensaje_lower for p in palabras_clave_imagen):
-        prompt_imagen = optimizar_prompt_ingles(mensaje, tipo="imagen")
+        prompt_imagen = optimizar_prompt_ingles(mensaje)
         prompt_encoded = urllib.parse.quote(prompt_imagen)
         url_imagen = f"https://image.pollinations.ai/prompt/{prompt_encoded}?width=1024&height=1024&model=flux&nologo=true"
 
@@ -110,7 +82,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         )
         return {"respuesta": respuesta_markdown, "modo_creador": False}
 
-    # 3. PROCESO NORMAL DE TEXTO CON GROQ
+    # 2. PROCESO NORMAL DE TEXTO CON GROQ
     try:
         messages = [{"role": "system", "content": INSTRUCCION_SISTEMA}]
 
