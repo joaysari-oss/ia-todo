@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>IA TODO — Asistente de Joao</title>
+  
+  <!-- Configuración PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     :root {
@@ -221,25 +226,4 @@
 
     <div class="input-area">
       <div class="tools">
-        <button class="tool-btn" id="btnCamera" title="Tomar foto">📷</button>
-        <button class="tool-btn" id="btnGallery" title="Subir de galería">🖼️</button>
-        <button class="tool-btn" id="btnFile" title="Documento">📄</button>
-      </div>
-      
-      <div class="input-row">
-        <div class="input-wrap">
-          <textarea id="input" rows="1" placeholder="Escribe o habla..." autofocus></textarea>
-          <button class="mic-inline-btn" id="btnMic" title="Hablar">🎤</button>
-        </div>
-        <button id="send">➤</button>
-      </div>
-    </div>
-  </div>
-
-  <input type="file" id="fileCamera" accept="image/*" capture="environment" />
-  <input type="file" id="fileGallery" accept="image/*" />
-  <input type="file" id="fileDoc" accept="application/pdf,.txt,.md,.csv,.json" />
-
-  <script src="/static/script.js"></script>
-</body>
-</html>
+        <button class
