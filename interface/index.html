@@ -23,29 +23,35 @@
       flex-direction: column;
       padding: 16px;
       gap: 12px;
-      transition: transform 0.3s ease;
+      transition: all 0.3s ease;
       z-index: 20;
     }
+    
+    /* Estado colapsado de la barra lateral en PC */
+    .sidebar.collapsed {
+      margin-left: -260px;
+    }
+
     .sidebar-header { display: flex; justify-content: space-between; align-items: center; }
     .sidebar-title { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
-    .chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-    .chat-item {
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid transparent;
-      font-size: 0.85rem;
+    
+    /* Botón de flecha para ocultar el historial */
+    .btn-close-sidebar {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.9rem;
       cursor: pointer;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      padding: 4px 8px;
+      border-radius: 6px;
       transition: all 0.2s;
     }
-    .chat-item:hover, .chat-item.active {
-      background: rgba(124,92,255,0.15);
-      border-color: rgba(124,92,255,0.3);
-      color: #fff;
+    .btn-close-sidebar:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.1);
     }
+
+    .chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 
     /* Main App */
     .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; }
@@ -136,6 +142,7 @@
     @media(max-width:768px){
       .sidebar { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
       .sidebar.open { transform: translateX(0); }
+      .sidebar.collapsed { margin-left: 0; }
     }
   </style>
 </head>
@@ -145,6 +152,7 @@
   <div class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <span class="sidebar-title">Historial de Chats</span>
+      <button class="btn-close-sidebar" id="btnCloseSidebar" title="Ocultar historial">◀</button>
     </div>
     <button class="btn-new" id="btnNewChatSidebar" style="width: 100%;">+ Nuevo Chat</button>
     <div class="chat-list" id="chatList"></div>
@@ -182,7 +190,7 @@
         <button class="tool-btn" id="btnFile" title="Documento">📄</button>
       </div>
       
-      <!-- Fila de entrada de texto + Micrófono e icon de enviar -->
+      <!-- Fila de entrada de texto + Micrófono e icono de enviar -->
       <div class="input-row">
         <div class="input-wrap">
           <textarea id="input" rows="1" placeholder="Escribe o habla..." autofocus></textarea>
