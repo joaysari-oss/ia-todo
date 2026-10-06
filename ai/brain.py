@@ -2,7 +2,6 @@ import os
 import time
 from google import genai
 
-# Inicialización recomendada para la librería google-genai
 client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
 
 INSTRUCCION_SISTEMA = (
@@ -76,8 +75,8 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        # Nombres de modelos actualizados para el SDK genai de Google
-     models/"gemini-3.8-flash"
+        # Modelos válidos con prefijo 'models/'
+        modelos = ["models/gemini-1.5-flash", "models/gemini-1.5-pro"]
         response = None
 
         for nombre_modelo in modelos:
@@ -95,7 +94,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                 except Exception as err:
                     print(f"[Intento {intento+1} en modelo {nombre_modelo} falló]: {err}")
                     time.sleep(1)
-            
+
             if response and response.text:
                 break
 
