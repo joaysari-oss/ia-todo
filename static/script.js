@@ -1,4 +1,4 @@
-// IA TODO - Frontend con historial en sidebar + Gemini + Opción de Eliminar Chat + Botón Colapsar Sidebar
+// IA TODO - Frontend con historial en sidebar + Galería de Imágenes + Gemini + Opción de Eliminar Chat + Botón Colapsar Sidebar
 
 const chat = document.getElementById('chat');
 const input = document.getElementById('input');
@@ -20,6 +20,7 @@ const sidebar = document.getElementById('sidebar');
 const btnToggleSidebar = document.getElementById('btnToggleSidebar');
 const btnCloseSidebar = document.getElementById('btnCloseSidebar');
 const chatListContainer = document.getElementById('chatList');
+const galeriaContainer = document.getElementById('galeria-imagenes');
 
 let reconociendo = false;
 let archivoSeleccionado = null;
@@ -75,8 +76,41 @@ function showTyping(show) {
   if (show) scrollBottom();
 }
 
+// MENSAJE DE BIENVENIDA ACTUALIZADO CON "CREAR IMÁGENES"
 function mensajeBienvenida() {
-  addMessage('¡Hola! Soy IA TODO.\n\nPuedo ayudarte con cualquier tema, recibir fotos, documentos y escucharte por micrófono.\n\n¿En qué te ayudo?', 'bot');
+  addMessage('¡Hola! Soy IA TODO.\n\nPuedo ayudarte con cualquier tema, crear imágenes, recibir fotos, documentos y escucharte por micrófono.\n\n¿En qué te ayudo?', 'bot');
+}
+
+// --- FUNCIONES DE LA GALERÍA DE IMÁGENES GENERADAS ---
+function guardarImagenGaleria(urlImagen) {
+  let galeria = JSON.parse(localStorage.getItem('ia_todo_galeria') || '[]');
+  if (!galeria.includes(urlImagen)) {
+    galeria.unshift(urlImagen);
+    localStorage.setItem('ia_todo_galeria', JSON.stringify(galeria));
+    renderGaleria();
+  }
+}
+
+function renderGaleria() {
+  if (!galeriaContainer) return;
+  let galeria = JSON.parse(localStorage.getItem('ia_todo_galeria') || '[]');
+  
+  if (galeria.length === 0) {
+    galeriaContainer.innerHTML = '<p style="font-size: 0.8rem; color: #888; text-align: center;">Sin imágenes aún</p>';
+    return;
+  }
+
+  galeriaContainer.innerHTML = '';
+  galeria.forEach(url => {
+    const imgCard = document.createElement('div');
+    imgCard.className = 'galeria-item';
+    imgCard.innerHTML = `
+      <a href="${url}" target="_blank" title="Ver imagen">
+        <img src="${url}" alt="Imagen generada" loading="lazy" style="width: 100%; height: 50px; object-fit: cover; border-radius: 6px;" />
+      </a>
+    `;
+    galeriaContainer.appendChild(imgCard);
+  });
 }
 
 // Inicializar un nuevo chat
@@ -91,6 +125,7 @@ function createNewChat() {
   input.style.height = 'auto';
   mensajeBienvenida();
   renderSidebar();
+  renderGaleria();
   input.focus();
 }
 
@@ -156,6 +191,7 @@ function loadChat(id) {
   }
 
   renderSidebar();
+  renderGaleria();
 }
 
 btnNewChat.addEventListener('click', createNewChat);
@@ -266,6 +302,14 @@ async function enviar() {
   const modoCreador = data.modo_creador === true;
 
   showTyping(false);
+
+  // Si la respuesta incluye una URL de imagen de Pollinations, la guardamos en la Galería
+  if (respuesta.includes('pollinations.ai/prompt/')) {
+    const match = respuesta.match(/https:\/\/image\.pollinations\.ai\/prompt\/[^\s\)]+/);
+    if (match) {
+      guardarImagenGaleria(match[0]);
+    }
+  }
 
   if (modoCreador) {
     creatorBadge.classList.add('show');
