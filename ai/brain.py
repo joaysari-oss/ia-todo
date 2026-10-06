@@ -2,6 +2,7 @@ import os
 import time
 from google import genai
 
+# Inicialización recomendada para la librería google-genai
 client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
 
 INSTRUCCION_SISTEMA = (
@@ -75,12 +76,11 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        # Cadena de modelos probados para maximizar disponibilidad
-        modelos = ["gemini-1.5-flash-8b", "gemini-1.5-flash", "gemini-1.5-pro"]
+        # Nombres de modelos actualizados para el SDK genai de Google
+        modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
         response = None
 
         for nombre_modelo in modelos:
-            # Reintentamos hasta 2 veces por modelo con una pequeña pausa
             for intento in range(2):
                 try:
                     response = client.models.generate_content(
@@ -94,7 +94,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                         break
                 except Exception as err:
                     print(f"[Intento {intento+1} en modelo {nombre_modelo} falló]: {err}")
-                    time.sleep(1.5)  # Pausa de 1.5s antes de reintentar si la API rechazó por velocidad
+                    time.sleep(1)
             
             if response and response.text:
                 break
@@ -103,7 +103,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             return {"respuesta": response.text, "modo_creador": False}
 
         return {
-            "respuesta": "La cuota gratuita de Gemini alcanzó su límite por un momento. Espera un minuto y vuelve a enviar tu pregunta.",
+            "respuesta": "La cuota o servicio de Gemini no respondió en este momento. Intenta de nuevo en unos momentos.",
             "modo_creador": False
         }
 
