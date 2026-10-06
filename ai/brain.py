@@ -78,22 +78,29 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             model="gemini-3.8-flash",
             contents=contents,
             config={
-                "system_instruction": INSTRUCCION_SISTEMA
-            }
-        )
+# Lista de modelos a intentar en orden si uno falla por límite o 503
+        modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+        response = None
+        ultimo_error = None
 
-        if ruta_archivo and os.path.exists(ruta_archivo):
+        for nombre_modelo in modelos:
             try:
-                os.remove(ruta_archivo)
-            except:
-                pass
+                response = client.models.generate_content(
+                    model=nombre_modelo,
+                    contents=contents,
+                    config={
+                        "system_instruction": INSTRUCCION_SISTEMA
+                    }
+                )
+                if response and response.text:
+                    break # Si respondió con éxito, salimos del bucle
+            except Exception as err:
+                print(f"[Aviso modelo {nombre_modelo} falló]: {err}")
+                ultimo_error = err
+                continue
 
-        texto = response.text.strip() if response.text else ""
-        if not texto:
-            return {"respuesta": "No pude procesar la respuesta en este momento. Por favor intenta de nuevo.", "modo_creador": False}
-
-        return {"respuesta": texto, "modo_creador": False}
-
-    except Exception as e:
-        print(f"[Error cerebro]: {e}")
-        return {"respuesta": f"Hubo una falla al conectar con la IA: {str(e)}", "modo_creador": False}
+        if not response or not response.text:
+            return {
+                "respuesta": f"Los servidores de Gemini están sobrecargados o se agotó el límite gratuito momentáneamente. Intenta de nuevo en unos minutos.",
+                "modo_creador": False
+            }
