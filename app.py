@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from ai.brain import preguntar
 
 app = Flask(__name__, template_folder='interface', static_folder='static')
@@ -8,6 +8,15 @@ app = Flask(__name__, template_folder='interface', static_folder='static')
 @app.route("/")
 def home():
     return render_template("index.html")
+
+# Rutas para PWA
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory('interface', 'manifest.json')
+
+@app.route("/sw.js")
+def service_worker():
+    return send_from_directory('.', 'sw.js')
 
 @app.route("/chat", methods=["POST"])
 def chat():
