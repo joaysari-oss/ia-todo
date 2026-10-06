@@ -75,7 +75,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
         # Lista de modelos a intentar en orden si uno falla por límite (429) o sobrecarga (503)
-        modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+        modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash" "gemini-3.8-flash"]
         response = None
         ultimo_error = None
 
