@@ -226,4 +226,34 @@
 
     <div class="input-area">
       <div class="tools">
-        <button class
+        <button class="tool-btn" id="btnCamera" title="Tomar foto">📷</button>
+        <button class="tool-btn" id="btnGallery" title="Subir de galería">🖼️</button>
+        <button class="tool-btn" id="btnFile" title="Documento">📄</button>
+      </div>
+      
+      <div class="input-row">
+        <div class="input-wrap">
+          <textarea id="input" rows="1" placeholder="Escribe o habla..." autofocus></textarea>
+          <button class="mic-inline-btn" id="btnMic" title="Hablar">🎤</button>
+        </div>
+        <button id="send">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileCamera" accept="image/*" capture="environment" />
+  <input type="file" id="fileGallery" accept="image/*" />
+  <input type="file" id="fileDoc" accept="application/pdf,.txt,.md,.csv,.json" />
+
+  <script src="/static/script.js"></script>
+
+  <!-- Registro del Service Worker para PWA -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('PWA Lista'))
+        .catch(err => console.log('Error PWA:', err));
+    }
+  </script>
+</body>
+</html>
