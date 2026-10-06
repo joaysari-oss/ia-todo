@@ -63,13 +63,12 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                 else:
                     mensaje = "Analiza este documento. Resume su contenido y extrae la información más importante."
 
-        if mensaje:
-            parts.append({"text": mensaje})
-
-        if ruta_archivo and os.path.exists(ruta_archivo):
             with open(ruta_archivo, "rb") as f:
                 archivo_subido = client.files.upload(file=f)
             parts.append(archivo_subido)
+
+        if mensaje:
+            parts.append({"text": mensaje})
 
         if parts:
             contents.append({"role": "user", "parts": parts})
@@ -77,13 +76,13 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        # Modelos configurados
-        modelos = ["gemini-3.8-flash"]
+        # Modelo oficial
+        modelos = ["models/gemini-3.8-flash"]
         response = None
 
-        # Configuración para el backoff progresivo tras errores 503/429
+        # Configuración para el backoff progresivo (pausas entre reintentos)
         MAX_INTENTOS = 4
-        TIEMPO_BASE = 2.0  # Tiempo base inicial en segundos
+        TIEMPO_BASE = 2.0  # Tiempo base en segundos
 
         for nombre_modelo in modelos:
             for intento in range(MAX_INTENTOS):
@@ -99,17 +98,10 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                         break
 
                 except APIError as err:
-                    # Captura específicamente sobrecarga (503) o límite de cuota/peticiones (429)
-                    codigo_error = getattr(err, 'code', None) or getattr(err, 'status_code', None)
-                    print(f"[Intento {intento + 1}/{MAX_INTENTOS} en {nombre_modelo}] Error de API ({codigo_error}): {err}")
-
+                    print(f"[Intento {intento + 1}/{MAX_INTENTOS} en {nombre_modelo}] Error API: {err}")
                     if intento < MAX_INTENTOS - 1:
-                        # Cálculo del tiempo de pausa con Backoff Exponencial + Jitter
-                        # Intento 0: ~2s + jitter
-                        # Intento 1: ~4s + jitter
-                        # Intento 2: ~8s + jitter
                         espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.5, 1.5)
-                        print(f" Esperando {espera:.2f} segundos antes del reintento...")
+                        print(f"Esperando {espera:.2f}s antes de reintentar...")
                         time.sleep(espera)
 
                 except Exception as err:
@@ -125,7 +117,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             return {"respuesta": response.text, "modo_creador": False}
 
         return {
-            "respuesta": "El servicio de Gemini no estuvo disponible tras varios reintentos. Intenta de nuevo en unos momentos.",
+            "respuesta": "La cuota o servicio de Gemini no respondió en este momento. Intenta de nuevo en unos momentos.",
             "modo_creador": False
         }
 
