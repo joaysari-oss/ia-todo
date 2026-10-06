@@ -27,7 +27,6 @@
       z-index: 20;
     }
     
-    /* Estado colapsado de la barra lateral en PC */
     .sidebar.collapsed {
       margin-left: -260px;
     }
@@ -35,7 +34,6 @@
     .sidebar-header { display: flex; justify-content: space-between; align-items: center; }
     .sidebar-title { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
     
-    /* Botón de flecha para ocultar el historial */
     .btn-close-sidebar {
       background: transparent;
       border: none;
@@ -52,6 +50,47 @@
     }
 
     .chat-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+
+    /* Ítem del chat con título y CANECA 🗑️ */
+    .chat-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid transparent;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chat-item:hover, .chat-item.active {
+      background: rgba(124,92,255,0.15);
+      border-color: rgba(124,92,255,0.3);
+      color: #fff;
+    }
+    .chat-title {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-right: 8px;
+    }
+    .btn-delete-chat {
+      background: transparent;
+      border: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      opacity: 0.7;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .btn-delete-chat:hover {
+      opacity: 1;
+      transform: scale(1.2);
+      background: rgba(255, 92, 122, 0.2);
+    }
 
     /* Main App */
     .main-wrapper { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; }
@@ -100,14 +139,12 @@
     .tool-btn:hover{background:rgba(124,92,255,0.2);border-color:rgba(124,92,255,0.4);color:#fff}
     .tool-btn.recording{background:rgba(255,92,122,0.25);border-color:var(--danger);color:var(--danger);animation:pulse 1s infinite}
     
-    /* Contenedor de la entrada con el micrófono adentro */
     .input-row{display:flex;gap:10px;align-items:flex-end}
     .input-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 8px 4px 16px;display:flex;align-items:center;gap:8px;transition:border-color 0.2s}
     .input-wrap:focus-within{border-color:rgba(124,92,255,0.5);box-shadow:0 0 0 3px rgba(124,92,255,0.15)}
     #input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:0.95rem;padding:10px 0;max-height:120px;resize:none;line-height:1.4}
     #input::placeholder{color:var(--text-muted)}
     
-    /* Estilo exclusivo del micrófono integrado */
     .mic-inline-btn {
       width: 36px;
       height: 36px;
@@ -142,7 +179,7 @@
     @media(max-width:768px){
       .sidebar { position: absolute; left: 0; top: 0; bottom: 0; transform: translateX(-100%); }
       .sidebar.open { transform: translateX(0); }
-      .sidebar.collapsed { margin-left: 0; }
+      .sidebar.collapsed { margin-left: 0; transform: translateX(-100%); }
     }
   </style>
 </head>
@@ -183,18 +220,15 @@
     </div>
 
     <div class="input-area">
-      <!-- Herramientas de adjuntar (Cámara, Galería, Archivos) -->
       <div class="tools">
         <button class="tool-btn" id="btnCamera" title="Tomar foto">📷</button>
         <button class="tool-btn" id="btnGallery" title="Subir de galería">🖼️</button>
         <button class="tool-btn" id="btnFile" title="Documento">📄</button>
       </div>
       
-      <!-- Fila de entrada de texto + Micrófono e icono de enviar -->
       <div class="input-row">
         <div class="input-wrap">
           <textarea id="input" rows="1" placeholder="Escribe o habla..." autofocus></textarea>
-          <!-- Botón de micrófono integrado aquí adentro -->
           <button class="mic-inline-btn" id="btnMic" title="Hablar">🎤</button>
         </div>
         <button id="send">➤</button>
