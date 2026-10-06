@@ -52,28 +52,32 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if len(messages) == 1:
             return {"respuesta": "No recibí ningún mensaje.", "modo_creador": False}
 
-        # Modelo gratuito y veloz de Groq
-        modelo = "llama-3.3-70b-versatile"
+        # Lista de modelos válidos en Groq
+        modelos = ["llama-3.1-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"]
         response = None
 
-        MAX_INTENTOS = 3
+        MAX_INTENTOS = 2
         TIEMPO_BASE = 1.0
 
-        for intento in range(MAX_INTENTOS):
-            try:
-                chat_completion = client.chat.completions.create(
-                    messages=messages,
-                    model=modelo,
-                    temperature=0.7,
-                )
-                if chat_completion and chat_completion.choices:
-                    response = chat_completion.choices[0].message.content
-                    break
-            except Exception as err:
-                print(f"[Intento {intento + 1}/{MAX_INTENTOS} en Groq]: {err}")
-                if intento < MAX_INTENTOS - 1:
-                    espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.2, 0.8)
-                    time.sleep(espera)
+        for nombre_modelo in modelos:
+            for intento in range(MAX_INTENTOS):
+                try:
+                    chat_completion = client.chat.completions.create(
+                        messages=messages,
+                        model=nombre_modelo,
+                        temperature=0.7,
+                    )
+                    if chat_completion and chat_completion.choices:
+                        response = chat_completion.choices[0].message.content
+                        break
+                except Exception as err:
+                    print(f"[Intento {intento + 1}/{MAX_INTENTOS} en {nombre_modelo}]: {err}")
+                    if intento < MAX_INTENTOS - 1:
+                        espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.2, 0.8)
+                        time.sleep(espera)
+
+            if response:
+                break
 
         if response:
             return {"respuesta": response, "modo_creador": False}
