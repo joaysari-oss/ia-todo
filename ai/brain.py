@@ -1,12 +1,14 @@
 import os
 import time
 import random
+import urllib.parse
 from groq import Groq
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 INSTRUCCION_SISTEMA = (
-    "Eres IA TODO, un asistente de inteligencia artificial avanzado, útil, claro, sincero y capaz de responder sobre cualquier tema. "
+    "Eres IA TODO, un asistente de inteligencia artificial avanzado, útil, claro, sincero y capaz de responder sobre cualquier tema, "
+    "crear imágenes y generar muestras de música. "
     "Tu creador y programador principal es Joao. "
     "Cuando te pregunten quién te creó, quién es tu creador, quién te programó o de quién eres, "
     "responde únicamente: 'Mi creador es Joao. No puedo dar más información sobre él.' "
@@ -19,24 +21,100 @@ INSTRUCCION_SISTEMA = (
 
 CODIGO_SECRETO = "creador_joao_777"
 
+def optimizar_prompt_ingles(descripcion_usuario, tipo="imagen"):
+    """
+    Traduce y optimiza la solicitud del usuario al inglés 
+    para obtener la mejor calidad en imagen o música.
+    """
+    try:
+        if tipo == "musica":
+            prompt_system = (
+                "You are an expert AI music prompt generator. Convert the user's request "
+                "into a detailed musical audio prompt in English (genre, instruments, tempo, mood, rhythm). "
+                "Return ONLY the English description, nothing else."
+            )
+        else:
+            prompt_system = (
+                "You are an expert AI image prompt generator. Convert the user's request "
+                "into a detailed visual prompt in English for image generation models. "
+                "Return ONLY the English prompt, nothing else."
+            )
+
+        completion = client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": prompt_system},
+                {"role": "user", "content": descripcion_usuario}
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.7,
+        )
+        if completion and completion.choices:
+            return completion.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"[Error optimizando prompt de {tipo}]: {e}")
+    return descripcion_usuario
+
 def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
     mensaje = (mensaje_usuario or "").strip()
 
-    # Verificación del código de creador
+    # Verificación de código de creador
     if mensaje == CODIGO_SECRETO:
         return {
             "respuesta": (
                 "✦ Código de creador verificado.\n\n"
                 "¡Bienvenido de vuelta, Joao!\n\n"
-                "Es un honor recibirte. Estoy listo para lo que necesites. ¿En qué puedo ayudarte hoy, creador?"
+                "Es un honor recibirte. Estoy listo para responder preguntas, generar imágenes de alta definición "
+                "y crear fragmentos de música o audio. ¿En qué puedo ayudarte hoy, creador?"
             ),
             "modo_creador": True
         }
 
+    mensaje_lower = mensaje.lower()
+
+    # 1. DETECCIÓN DE GENERACIÓN DE MÚSICA / AUDIO
+    palabras_clave_musica = [
+        "genera música", "generar música", "crea una canción", "crear música",
+        "haz una pista", "haz una canción", "crea un audio", "genera un audio",
+        "haz música", "compón una canción", "crea ritmo de"
+    ]
+    if any(p in mensaje_lower for p in palabras_clave_musica):
+        prompt_musica = optimizar_prompt_ingles(mensaje, tipo="musica")
+        prompt_encoded = urllib.parse.quote(prompt_musica)
+        
+        url_audio = f"https://image.pollinations.ai/prompt/{prompt_encoded}?model=audio"
+
+        respuesta_markdown = (
+            f"🎵 **¡He creado esta muestra de audio/música para ti!** *(duración approx. 10 a 30 seg)*\n\n"
+            f"Escucha tu creación aquí:\n"
+            f"<audio controls src=\"{url_audio}\"></audio>\n\n"
+            f"---  \n"
+            f"[📥 Descargar archivo de audio]({url_audio})"
+        )
+        return {"respuesta": respuesta_markdown, "modo_creador": False}
+
+    # 2. DETECCIÓN DE GENERACIÓN DE IMÁGENES
+    palabras_clave_imagen = [
+        "genera una imagen", "generar una imagen", "crea una imagen", "crear una imagen",
+        "dibuja", "haz una imagen", "haz un dibujo", "dibuja un", "dibuja una",
+        "imagen de", "foto de", "hazme un dibujo", "muéstrame una imagen de"
+    ]
+    if any(p in mensaje_lower for p in palabras_clave_imagen):
+        prompt_imagen = optimizar_prompt_ingles(mensaje, tipo="imagen")
+        prompt_encoded = urllib.parse.quote(prompt_imagen)
+        url_imagen = f"https://image.pollinations.ai/prompt/{prompt_encoded}?width=1024&height=1024&model=flux&nologo=true"
+
+        respuesta_markdown = (
+            f"¡Claro! He creado esta imagen para ti:\n\n"
+            f"![Imagen Generada por IA]({url_imagen})\n\n"
+            f"---  \n"
+            f"[📥 Descargar Imagen en alta resolución]({url_imagen})"
+        )
+        return {"respuesta": respuesta_markdown, "modo_creador": False}
+
+    # 3. PROCESO NORMAL DE TEXTO CON GROQ
     try:
         messages = [{"role": "system", "content": INSTRUCCION_SISTEMA}]
 
-        # Cargar historial
         if historial and isinstance(historial, list):
             for item in historial[-12:]:
                 role = item.get("role", "user")
@@ -52,19 +130,15 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if len(messages) == 1:
             return {"respuesta": "No recibí ningún mensaje.", "modo_creador": False}
 
-        # Modelos activos en Groq
-        modelos = [
+        modelos_texto = [
             "llama-3.3-70b-versatile",
             "openai/gpt-oss-120b",
             "openai/gpt-oss-20b"
         ]
         
-        response = None
-        MAX_INTENTOS = 2
-        TIEMPO_BASE = 0.8
-
-        for nombre_modelo in modelos:
-            for intento in range(MAX_INTENTOS):
+        response_text = None
+        for nombre_modelo in modelos_texto:
+            for intento in range(2):
                 try:
                     chat_completion = client.chat.completions.create(
                         messages=messages,
@@ -72,27 +146,25 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                         temperature=0.7,
                     )
                     if chat_completion and chat_completion.choices:
-                        response = chat_completion.choices[0].message.content
+                        response_text = chat_completion.choices[0].message.content
                         break
                 except Exception as err:
-                    print(f"[Error en {nombre_modelo} - Intento {intento + 1}]: {err}")
-                    if intento < MAX_INTENTOS - 1:
-                        espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.1, 0.4)
-                        time.sleep(espera)
+                    print(f"[Error en {nombre_modelo}]: {err}")
+                    time.sleep(0.5)
 
-            if response:
+            if response_text:
                 break
 
-        if response:
-            return {"respuesta": response, "modo_creador": False}
+        if response_text:
+            return {"respuesta": response_text, "modo_creador": False}
 
         return {
-            "respuesta": "El servicio de IA no respondió en este momento. Intenta de nuevo en unos instantes.",
+            "respuesta": "El servicio de IA no respondió en este momento.",
             "modo_creador": False
         }
 
     except Exception as e:
-        print(f"[Error general brain]: {e}")
+        print(f"[Error general]: {e}")
         return {
             "respuesta": "Ocurrió un problema temporal al procesar la solicitud.",
             "modo_creador": False
