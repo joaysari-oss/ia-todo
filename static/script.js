@@ -1,4 +1,4 @@
-// IA TODO - Frontend con historial en sidebar + Gemini + Opción de Eliminar Chat
+// IA TODO - Frontend con historial en sidebar + Gemini + Opción de Eliminar Chat + Botón Colapsar Sidebar
 
 // Inyectar estilos CSS para la caneca de eliminar chats
 if (!document.getElementById('css-caneca')) {
@@ -45,6 +45,7 @@ const btnCamera = document.getElementById('btnCamera');
 const btnGallery = document.getElementById('btnGallery');
 const btnFile = document.getElementById('btnFile');
 const btnNewChat = document.getElementById('btnNewChat');
+const btnNewChatSidebar = document.getElementById('btnNewChatSidebar');
 const creatorBadge = document.getElementById('creatorBadge');
 const fileCamera = document.getElementById('fileCamera');
 const fileGallery = document.getElementById('fileGallery');
@@ -53,6 +54,7 @@ const fileDoc = document.getElementById('fileDoc');
 // Elementos del Historial / Sidebar
 const sidebar = document.getElementById('sidebar');
 const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+const btnCloseSidebar = document.getElementById('btnCloseSidebar');
 const chatListContainer = document.getElementById('chatList');
 
 let reconociendo = false;
@@ -145,7 +147,7 @@ function renderSidebar() {
     // Botón para eliminar chat (caneca)
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'btn-delete-chat';
-    deleteBtn.innerHTML = '🗑️️';
+    deleteBtn.innerHTML = '🗑';
     deleteBtn.title = 'Eliminar conversación';
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -193,10 +195,23 @@ function loadChat(id) {
 }
 
 btnNewChat.addEventListener('click', createNewChat);
+if (btnNewChatSidebar) btnNewChatSidebar.addEventListener('click', createNewChat);
+
+// Eventos para ocultar/mostrar la barra lateral
+if (btnCloseSidebar && sidebar) {
+  btnCloseSidebar.addEventListener('click', () => {
+    sidebar.classList.add('collapsed');
+    sidebar.classList.remove('open');
+  });
+}
 
 if (btnToggleSidebar && sidebar) {
   btnToggleSidebar.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
+    if (sidebar.classList.contains('collapsed')) {
+      sidebar.classList.remove('collapsed');
+    } else {
+      sidebar.classList.toggle('open');
+    }
   });
 }
 
@@ -356,7 +371,7 @@ btnGallery.addEventListener('click', () => fileGallery.click());
 fileGallery.addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
   archivoSeleccionado = f;
-  addMessage('🖼️ Foto de galería lista. Escribe algo o pulsa Enviar.', 'bot');
+  addMessage('🖼️️ Foto de galería lista. Escribe algo o pulsa Enviar.', 'bot');
 });
 
 // Documento
