@@ -56,7 +56,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             "respuesta": (
                 "✦ Código de creador verificado.\n\n"
                 "¡Bienvenido de vuelta, Joao!\n\n"
-                "Es un honor recibirte. Estoy listo para responder preguntas y generar imágenes de alta definición. "¿En qué puedo ayudarte hoy, creador?"
+                "Es un honor recibirte. Estoy listo para responder preguntas y generar imágenes de alta definición. ¿En qué puedo ayudarte hoy, creador?"
             ),
             "modo_creador": True
         }
