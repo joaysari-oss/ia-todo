@@ -1,6 +1,8 @@
 import os
 import time
+import random
 from google import genai
+from google.genai.errors import APIError
 
 client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
 
@@ -75,12 +77,16 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
         if not contents:
             return {"respuesta": "No recibí ningún mensaje ni archivo.", "modo_creador": False}
 
-        # Modelo actualizado a la versión actual con el prefijo 'models/'
-        modelos = ["models/gemini-3.8-flash"]
+        # Modelos configurados
+        modelos = ["gemini-3.8-flash"]
         response = None
 
+        # Configuración para el backoff progresivo tras errores 503/429
+        MAX_INTENTOS = 4
+        TIEMPO_BASE = 2.0  # Tiempo base inicial en segundos
+
         for nombre_modelo in modelos:
-            for intento in range(2):
+            for intento in range(MAX_INTENTOS):
                 try:
                     response = client.models.generate_content(
                         model=nombre_modelo,
@@ -91,9 +97,26 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
                     )
                     if response and response.text:
                         break
+
+                except APIError as err:
+                    # Captura específicamente sobrecarga (503) o límite de cuota/peticiones (429)
+                    codigo_error = getattr(err, 'code', None) or getattr(err, 'status_code', None)
+                    print(f"[Intento {intento + 1}/{MAX_INTENTOS} en {nombre_modelo}] Error de API ({codigo_error}): {err}")
+
+                    if intento < MAX_INTENTOS - 1:
+                        # Cálculo del tiempo de pausa con Backoff Exponencial + Jitter
+                        # Intento 0: ~2s + jitter
+                        # Intento 1: ~4s + jitter
+                        # Intento 2: ~8s + jitter
+                        espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.5, 1.5)
+                        print(f" Esperando {espera:.2f} segundos antes del reintento...")
+                        time.sleep(espera)
+
                 except Exception as err:
-                    print(f"[Intento {intento+1} en {nombre_modelo}]: {err}")
-                    time.sleep(1)
+                    print(f"[Intento {intento + 1}/{MAX_INTENTOS} en {nombre_modelo}] Error inesperado: {err}")
+                    if intento < MAX_INTENTOS - 1:
+                        espera = (TIEMPO_BASE * (2 ** intento)) + random.uniform(0.5, 1.5)
+                        time.sleep(espera)
 
             if response and response.text:
                 break
@@ -102,7 +125,7 @@ def preguntar(mensaje_usuario, ruta_archivo=None, historial=None):
             return {"respuesta": response.text, "modo_creador": False}
 
         return {
-            "respuesta": "La cuota o servicio de Gemini no respondió en este momento. Intenta de nuevo en unos momentos.",
+            "respuesta": "El servicio de Gemini no estuvo disponible tras varios reintentos. Intenta de nuevo en unos momentos.",
             "modo_creador": False
         }
 
