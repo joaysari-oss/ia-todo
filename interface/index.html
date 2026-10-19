@@ -4,114 +4,198 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111318">
-  <title>IA TODO</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta name="theme-color" content="#17152f">
+  <title>IA TODO — Tu inteligencia artificial</title>
+
   <style>
     :root {
       color-scheme: dark;
-      --fondo: #111318;
-      --panel: #191c23;
-      --borde: #30343d;
-      --texto: #f5f6fa;
-      --secundario: #a4a9b5;
-      --acento: #7657f6;
+      --fondo: #17152f;
+      --panel: #211e42;
+      --panel-2: #292650;
+      --borde: #403a70;
+      --texto: #f8f7ff;
+      --suave: #b9b5dc;
+      --morado: #895cff;
+      --azul: #438cff;
+      --verde: #7de8bd;
+      --degradado: linear-gradient(135deg, #9a5cff, #5578ff);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
       height: 100dvh;
       overflow: hidden;
       display: flex;
-      background: var(--fondo);
       color: var(--texto);
-      font-family: Arial, sans-serif;
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      background:
+        radial-gradient(ellipse at 10% 0%, #392660 0%, transparent 36%),
+        radial-gradient(ellipse at 100% 100%, #172e60 0%, transparent 35%),
+        var(--fondo);
     }
 
-    button, textarea { font: inherit; }
-    button { cursor: pointer; }
+    button, textarea {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      transition: background .2s, transform .2s, border-color .2s;
+    }
+
+    button:focus-visible, textarea:focus-visible {
+      outline: 2px solid #a58bff;
+      outline-offset: 3px;
+    }
+
+    button:disabled {
+      opacity: .65;
+      cursor: wait;
+    }
 
     .sidebar {
-      width: 255px;
-      flex-shrink: 0;
-      background: #171920;
-      border-right: 1px solid var(--borde);
-      padding: 18px 12px;
+      width: 270px;
+      min-width: 270px;
+      padding: 22px 15px;
       display: flex;
       flex-direction: column;
+      gap: 15px;
+      background: rgba(25, 22, 53, .91);
+      border-right: 1px solid #51447e;
+      backdrop-filter: blur(22px);
+      z-index: 5;
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
       gap: 12px;
+      padding: 4px 8px 20px;
     }
 
-    .logo {
-      padding: 8px 10px 18px;
+    .logo-icono {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 25px;
+      background: var(--degradado);
+      box-shadow: 0 5px 25px #805cff55;
+    }
+
+    .marca h1 {
       font-size: 23px;
-      font-weight: 800;
-      letter-spacing: .4px;
+      margin: 0;
+      letter-spacing: -.8px;
     }
 
-    .logo span { color: #9a85ff; }
+    .marca h1 span {
+      color: #a993ff;
+    }
 
-    .nuevo, .sidebar button, .icon-btn {
-      color: var(--texto);
-      background: transparent;
-      border: 1px solid var(--borde);
-      border-radius: 11px;
-      padding: 11px;
-      text-align: left;
+    .marca small {
+      display: block;
+      margin-top: 4px;
+      color: var(--suave);
+      font-size: 11px;
     }
 
     .nuevo {
-      background: var(--acento);
-      border-color: var(--acento);
-      text-align: center;
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 12px;
+      color: white;
+      background: var(--degradado);
+      box-shadow: 0 5px 22px #7756ed35;
       font-weight: 700;
+      text-align: center;
     }
 
-    .historial-titulo {
-      color: var(--secundario);
-      font-size: 12px;
-      margin: 17px 8px 5px;
+    .nuevo:hover, .enviar:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    .etiqueta {
+      color: #aaa4d6;
+      font-size: 11px;
+      letter-spacing: 1.4px;
+      font-weight: 700;
+      padding: 13px 8px 3px;
     }
 
     #listaChats {
-      overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 7px;
+      overflow-y: auto;
     }
 
     .chat-item {
       display: flex;
       align-items: center;
       gap: 5px;
+      min-width: 0;
     }
 
     .chat-item .abrir-chat {
       flex: 1;
       min-width: 0;
+      padding: 12px;
+      text-align: left;
       overflow: hidden;
-      white-space: nowrap;
       text-overflow: ellipsis;
-      border-color: transparent;
+      white-space: nowrap;
+      color: #d8d5f5;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 12px;
     }
 
+    .chat-item .abrir-chat:hover,
     .chat-item.activo .abrir-chat {
-      background: #292d38;
+      background: linear-gradient(110deg, #3a2c67, #26345e);
+      border-color: #5e4b99;
+      color: white;
     }
 
     .eliminar {
       border: 0 !important;
-      color: #ff8b8b !important;
-      padding: 9px !important;
+      color: #ff9dba !important;
+      background: transparent !important;
+      border-radius: 9px;
+      padding: 8px !important;
+    }
+
+    .eliminar:hover {
+      background: #5b294b !important;
     }
 
     .pie-sidebar {
       margin-top: auto;
-      padding: 10px;
-      color: var(--secundario);
+      padding: 13px;
+      border: 1px solid #484071;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #2b2452, #202c50);
+    }
+
+    .pie-sidebar strong {
+      display: block;
       font-size: 12px;
+    }
+
+    .pie-sidebar span {
+      display: block;
+      color: var(--suave);
+      font-size: 11px;
+      margin-top: 5px;
     }
 
     .principal {
@@ -122,97 +206,231 @@
     }
 
     header {
-      min-height: 60px;
+      min-height: 72px;
+      padding: 14px 25px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--borde);
+      border-bottom: 1px solid #3a3565;
+      background: rgba(24, 22, 51, .48);
+      backdrop-filter: blur(15px);
+    }
+
+    .encabezado-izquierdo {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .encabezado-izquierdo strong {
+      font-size: 16px;
+    }
+
+    .subtitulo {
+      color: var(--suave);
+      font-size: 11px;
+      margin-top: 4px;
     }
 
     .estado {
-      font-size: 12px;
-      color: #9de4b3;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 13px;
+      color: #a8f3d0;
+      background: #1e443f;
+      border: 1px solid #30675e;
+      border-radius: 30px;
+      font-size: 11px;
     }
 
     #mensajes {
       flex: 1;
-      overflow-y: auto;
       width: 100%;
-      max-width: 850px;
+      max-width: 950px;
       margin: 0 auto;
-      padding: 26px 20px;
+      padding: 28px 24px;
+      overflow-y: auto;
+      scrollbar-color: #51428a transparent;
     }
 
     .bienvenida {
+      max-width: 620px;
+      margin: 9vh auto 45px;
       text-align: center;
-      margin: 12vh auto 30px;
     }
 
-    .bienvenida h1 { font-size: 32px; }
-    .bienvenida p { color: var(--secundario); }
+    .bienvenida-icono {
+      width: 85px;
+      height: 85px;
+      display: grid;
+      place-items: center;
+      margin: 0 auto 25px;
+      border-radius: 28px;
+      font-size: 42px;
+      background: var(--degradado);
+      box-shadow: 0 10px 50px #805cff4d;
+      animation: flotar 4s ease-in-out infinite;
+    }
+
+    @keyframes flotar {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
+    }
+
+    .bienvenida h2 {
+      font-size: clamp(28px, 4vw, 43px);
+      letter-spacing: -1.4px;
+      margin: 0 0 15px;
+    }
+
+    .bienvenida h2 span {
+      background: linear-gradient(100deg, #c09bff, #76aaff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .bienvenida p {
+      max-width: 460px;
+      margin: 0 auto;
+      color: var(--suave);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .sugerencias {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 30px;
+      text-align: left;
+    }
+
+    .sugerencia {
+      border: 1px solid #494078;
+      border-radius: 15px;
+      padding: 15px;
+      background: linear-gradient(135deg, #29244eaa, #242c4baa);
+      color: #efedff;
+      text-align: left;
+    }
+
+    .sugerencia:hover {
+      border-color: #9274ff;
+      background: #332c60;
+      transform: translateY(-2px);
+    }
+
+    .sugerencia span {
+      display: block;
+      font-size: 21px;
+      margin-bottom: 9px;
+    }
+
+    .sugerencia strong {
+      font-size: 12px;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .sugerencia small {
+      font-size: 11px;
+      color: var(--suave);
+      line-height: 1.5;
+    }
 
     .mensaje {
       display: flex;
-      margin: 18px 0;
-      gap: 12px;
-      line-height: 1.65;
+      align-items: flex-start;
+      gap: 13px;
+      margin: 22px 0;
+      line-height: 1.75;
     }
 
     .avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      flex-shrink: 0;
       display: grid;
       place-items: center;
-      background: #292d38;
-      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, #895cff, #478cff);
+      box-shadow: 0 4px 15px #7657f633;
+    }
+
+    .mensaje.usuario .avatar {
+      background: linear-gradient(135deg, #347bdc, #5162b6);
     }
 
     .contenido {
       min-width: 0;
-      white-space: pre-wrap;
       overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      padding: 11px 15px;
+      border: 1px solid #39355e;
+      border-radius: 4px 16px 16px 16px;
+      background: #242143bb;
+      color: #f0eeff;
     }
 
-    .mensaje.usuario .avatar {
-      background: var(--acento);
+    .mensaje.usuario .contenido {
+      background: linear-gradient(135deg, #34295f, #243a66);
+      border-color: #514783;
+      border-radius: 4px 16px 16px 16px;
     }
 
     .contenido img {
+      display: block;
       max-width: min(100%, 360px);
       max-height: 320px;
-      border-radius: 12px;
-      display: block;
-      margin-top: 8px;
+      border-radius: 13px;
+      margin-top: 10px;
     }
 
     .zona-escritura {
       width: 100%;
-      padding: 12px 18px 18px;
-      border-top: 1px solid var(--borde);
+      padding: 15px 22px 18px;
+      border-top: 1px solid #3a3565;
+      background: linear-gradient(180deg, #19172fbb, #1e2042);
     }
 
     .compositor {
       max-width: 850px;
       margin: 0 auto;
-      border: 1px solid #414550;
-      border-radius: 17px;
-      background: var(--panel);
-      padding: 12px;
+      padding: 14px;
+      border-radius: 21px;
+      border: 1px solid #5b4c92;
+      background: linear-gradient(135deg, #292448, #242b4e);
+      box-shadow: 0 8px 35px #0b0a2455, inset 0 1px #ffffff08;
     }
 
     #mensaje {
       width: 100%;
-      min-height: 48px;
+      min-height: 52px;
       max-height: 180px;
       resize: vertical;
-      color: var(--texto);
+      padding: 10px;
+      color: white;
       background: transparent;
       border: 0;
       outline: none;
-      padding: 8px;
+      font-size: 14px;
+    }
+
+    #mensaje::placeholder {
+      color: #aaa5cf;
+    }
+
+    #archivoNombre {
+      color: #c3b7ff;
+      font-size: 12px;
+      padding: 5px 9px;
+      overflow-wrap: anywhere;
     }
 
     .acciones {
@@ -220,100 +438,194 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
+      padding-top: 8px;
     }
 
     .acciones button {
-      border: 1px solid var(--borde);
-      border-radius: 9px;
-      background: #242832;
-      color: var(--texto);
       padding: 9px 11px;
+      border-radius: 11px;
+      border: 1px solid #49426f;
+      background: #302d54;
+      color: #e5e1ff;
+      font-size: 12px;
+    }
+
+    .acciones button:hover {
+      border-color: #9880ff;
+      background: #41366f;
     }
 
     .acciones .enviar {
       margin-left: auto;
-      background: var(--acento);
-      border-color: var(--acento);
+      min-width: 105px;
+      padding: 11px 17px;
+      color: white;
       font-weight: 700;
-    }
-
-    #archivoNombre {
-      color: var(--secundario);
-      font-size: 12px;
-      padding: 5px;
+      border: 0;
+      background: linear-gradient(120deg, #9a5cff, #487cff);
+      box-shadow: 0 5px 18px #7657f644;
     }
 
     .nota {
+      max-width: 850px;
+      margin: 11px auto 0;
       text-align: center;
-      color: var(--secundario);
-      font-size: 11px;
-      margin: 10px 0 0;
+      color: #aaa5ce;
+      font-size: 10px;
     }
 
-    #menuBtn { display: none; }
+    #menuBtn {
+      display: none;
+    }
 
-    @media (max-width: 700px) {
+    @media (max-width: 760px) {
       .sidebar {
         position: fixed;
-        z-index: 5;
         inset: 0 auto 0 0;
-        transform: translateX(-100%);
-        transition: transform .2s;
+        transform: translateX(-105%);
+        transition: transform .22s ease;
         box-shadow: none;
       }
 
       .sidebar.abierta {
         transform: translateX(0);
-        box-shadow: 0 0 0 100vmax #0009;
+        box-shadow: 0 0 0 100vmax #09081caa;
       }
 
-      #menuBtn { display: inline-block; }
-      header { padding: 10px 12px; }
-      #mensajes { padding: 18px 13px; }
-      .zona-escritura { padding: 10px; }
-      .bienvenida h1 { font-size: 25px; }
+      #menuBtn {
+        display: inline-block;
+      }
+
+      header {
+        padding: 12px 14px;
+      }
+
+      #mensajes {
+        padding: 18px 13px;
+      }
+
+      .zona-escritura {
+        padding: 10px;
+      }
+
+      .sugerencias {
+        grid-template-columns: 1fr;
+      }
+
+      .bienvenida {
+        margin-top: 5vh;
+      }
+
+      .bienvenida h2 {
+        font-size: 29px;
+      }
+
+      .acciones {
+        gap: 6px;
+      }
+
+      .acciones button {
+        padding: 9px;
+        font-size: 11px;
+      }
+
+      .acciones .enviar {
+        min-width: 88px;
+      }
+
+      .estado {
+        padding: 7px 9px;
+        font-size: 10px;
+      }
     }
   </style>
 </head>
 
 <body>
   <aside class="sidebar" id="sidebar">
-    <div class="logo">IA <span>TODO</span></div>
+    <div class="marca">
+      <div class="logo-icono">✦</div>
+      <div>
+        <h1>IA <span>TODO</span></h1>
+        <small>Tu universo de inteligencia</small>
+      </div>
+    </div>
 
     <button class="nuevo" id="nuevoChat">＋ Nueva conversación</button>
 
-    <div class="historial-titulo">TUS CONVERSACIONES</div>
+    <div class="etiqueta">TU HISTORIAL</div>
     <div id="listaChats"></div>
 
-    <div class="pie-sidebar">IA TODO · Asistente inteligente</div>
+    <div class="pie-sidebar">
+      <strong>✦ IA TODO está contigo</strong>
+      <span>Ideas, respuestas y posibilidades en un solo lugar.</span>
+    </div>
   </aside>
 
   <main class="principal">
     <header>
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="icon-btn" id="menuBtn" aria-label="Abrir menú">☰</button>
-        <strong>IA TODO</strong>
+      <div class="encabezado-izquierdo">
+        <button class="acciones" id="menuBtn" aria-label="Abrir menú">☰</button>
+        <div>
+          <strong>Asistente inteligente</strong>
+          <div class="subtitulo">Un mundo de posibilidades</div>
+        </div>
       </div>
       <span class="estado" id="estado">● Lista para ayudarte</span>
     </header>
 
     <section id="mensajes" aria-live="polite">
       <div class="bienvenida" id="bienvenida">
-        <h1>¿En qué te puedo ayudar?</h1>
-        <p>Pregunta, escribe, adjunta una imagen o dicta tu mensaje.</p>
+        <div class="bienvenida-icono">✦</div>
+        <h2>Hola, bienvenido a <span>IA TODO</span></h2>
+        <p>
+          Tu espacio para aprender, crear, investigar y resolver tus dudas.
+          ¿Qué vamos a descubrir hoy?
+        </p>
+
+        <div class="sugerencias">
+          <button class="sugerencia" data-pregunta="Explícame un tema difícil paso a paso.">
+            <span>📚</span>
+            <strong>Aprende algo nuevo</strong>
+            <small>Entiende cualquier tema paso a paso.</small>
+          </button>
+
+          <button class="sugerencia" data-pregunta="Dame ideas creativas para un proyecto.">
+            <span>💡</span>
+            <strong>Inspírate y crea</strong>
+            <small>Encuentra ideas para tus proyectos.</small>
+          </button>
+
+          <button class="sugerencia" data-pregunta="Busca información reciente en internet sobre las noticias importantes de hoy.">
+            <span>🌐</span>
+            <strong>Explora información</strong>
+            <small>Investiga temas y actualidad.</small>
+          </button>
+
+          <button class="sugerencia" data-pregunta="Ayúdame a crear un programa o un videojuego.">
+            <span>🎮</span>
+            <strong>Construye algo increíble</strong>
+            <small>Programa, diseña y experimenta.</small>
+          </button>
+        </div>
       </div>
     </section>
 
     <section class="zona-escritura">
       <div class="compositor">
-        <textarea id="mensaje" placeholder="Escribe tu mensaje..." rows="2"></textarea>
+        <textarea
+          id="mensaje"
+          placeholder="Escribe aquí lo que quieras preguntarme..."
+          rows="2"
+          aria-label="Escribe tu mensaje"
+        ></textarea>
 
         <div id="archivoNombre"></div>
 
         <div class="acciones">
-          <button id="fotoBtn" type="button">🖼️ Foto</button>
+          <button id="fotoBtn" type="button">▧ Foto</button>
           <button id="archivoBtn" type="button">📎 Archivo</button>
-          <button id="dictarBtn" type="button">🎙️ Dictar</button>
+          <button id="dictarBtn" type="button">🎙 Dictar</button>
           <button id="leerBtn" type="button">🔊 Leer</button>
           <button id="compartirBtn" type="button">↗ Compartir</button>
           <button id="borrarAdjuntoBtn" type="button">✕ Quitar archivo</button>
@@ -321,11 +633,29 @@
         </div>
 
         <input id="imagenInput" type="file" accept="image/*" hidden>
-        <input id="archivoInput" type="file" accept=".txt,.md,.csv,.json,.py,.html,.css,.js" hidden>
+        <input
+          id="archivoInput"
+          type="file"
+          accept=".txt,.md,.csv,.json,.py,.html,.css,.js"
+          hidden
+        >
       </div>
-      <p class="nota">Comprueba la información importante. Las respuestas pueden contener errores.</p>
+
+      <p class="nota">
+        IA TODO puede cometer errores. Comprueba la información importante.
+      </p>
     </section>
   </main>
+
+  <script>
+    document.querySelectorAll("[data-pregunta]").forEach((boton) => {
+      boton.addEventListener("click", () => {
+        const campo = document.getElementById("mensaje");
+        campo.value = boton.dataset.pregunta || "";
+        campo.focus();
+      });
+    });
+  </script>
 
   <script src="/static/script.js"></script>
 </body>
