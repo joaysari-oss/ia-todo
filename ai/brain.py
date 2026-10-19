@@ -1,124 +1,88 @@
 
 import os
+import logging
 import requests
 from bs4 import BeautifulSoup
 from groq import Groq
 
-# ==================================================
-# CONFIGURACIÓN DE GROQ
-# ==================================================
+# --------------------------------------------------
+# CONFIGURACIÓN
+# --------------------------------------------------
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("ia_todo")
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+
+TEXT_MODEL = os.getenv(
+    "GROQ_TEXT_MODEL",
+    "openai/gpt-oss-20b"
+)
+
+VISION_MODEL = os.getenv(
+    "GROQ_VISION_MODEL",
+    "meta-llama/llama-4-scout-17b-16e-instruct"
+)
 
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
-TEXT_MODEL = os.getenv("GROQ_TEXT_MODEL", "openai/gpt-oss-20b")
-VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
 
-
-# ==================================================
-# BÚSQUEDA WEB GRATUITA CON DUCKDUCKGO
-# ==================================================
+# --------------------------------------------------
+# BÚSQUEDA WEB GRATUITA
+# --------------------------------------------------
 
 PALABRAS_ACTUALIDAD = [
-    "noticias",
-    "noticia",
-    "hoy",
-    "actualidad",
-    "actual",
-    "último",
-    "última",
-    "últimos",
-    "últimas",
-    "reciente",
-    "recientes",
-    "ahora",
-    "buscar en internet",
-    "busca en internet",
-    "en internet",
-    "en la web",
-    "precio actual",
-    "resultado de hoy",
-    "quién ganó",
-    "quien ganó"
+    "noticias", "noticia", "hoy", "actualidad",
+    "último", "última", "últimos", "últimas",
+    "reciente", "recientes", "ahora",
+    "buscar en internet", "busca en internet",
+    "en internet", "en la web", "precio actual",
+    "resultado de hoy", "quién ganó", "quien ganó",
+    "última hora", "últimas noticias"
 ]
 
 
 def necesita_busqueda(mensaje):
-    mensaje = (mensaje or "").lower()
-
-    return any(
-        palabra in mensaje
-        for palabra in PALABRAS_ACTUALIDAD
-    )
+    texto = (mensaje or "").lower()
+    return any(p in texto for p in PALABRAS_ACTUALIDAD)
 
 
 def buscar_web(consulta, max_resultados=5):
-    """
-    Busca resultados mediante la página HTML de DuckDuckGo.
-    No necesita una clave de API adicional, pero puede tener límites.
-    """
-
     url = "https://html.duckduckgo.com/html/"
 
-    encabezados = {
-        "User-Agent": (
-            "Mozilla/5.0 "
-            "(Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 Chrome/120 Safari/537.36"
-        )
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130 Safari/537.36"
     }
 
     try:
         respuesta = requests.post(
             url,
             data={"q": consulta},
-            headers=encabezados,
+            headers=headers,
             timeout=12
         )
-
         respuesta.raise_for_status()
 
-        soup = BeautifulSoup(
-            respuesta.text,
-            "html.parser"
-        )
-
+        soup = BeautifulSoup(respuesta.text, "html.parser")
         resultados = []
 
-        for resultado in soup.select(".result"):
-            titulo_elemento = resultado.select_one(
-                ".result__title"
-            )
-
-            resumen_elemento = resultado.select_one(
-                ".result__snippet"
-            )
-
-            enlace_elemento = resultado.select_one(
-                ".result__title a"
-            )
+        for item in soup.select(".result"):
+            titulo_elemento = item.select_one(".result__title")
+            resumen_elemento = item.select_one(".result__snippet")
+            enlace_elemento = item.select_one(".result__title a")
 
             if not titulo_elemento:
                 continue
 
-            titulo = titulo_elemento.get_text(
-                " ",
-                strip=True
+            titulo = titulo_elemento.get_text(" ", strip=True)
+            resumen = (
+                resumen_elemento.get_text(" ", strip=True)
+                if resumen_elemento else ""
             )
-
-            resumen = ""
-
-            if resumen_elemento:
-                resumen = resumen_elemento.get_text(
-                    " ",
-                    strip=True
-                )
-
-            enlace = ""
-
-            if enlace_elemento:
-                enlace = enlace_elemento.get("href", "")
+            enlace = (
+                enlace_elemento.get("href", "")
+                if enlace_elemento else ""
+            )
 
             if titulo:
                 resultados.append({
@@ -132,10 +96,8 @@ def buscar_web(consulta, max_resultados=5):
 
         return resultados
 
-    except requests.RequestException:
-        return []
-
-    except Exception:
+    except Exception as error:
+        logger.warning("La búsqueda web falló: %s", error)
         return []
 
 
@@ -143,22 +105,17 @@ def preparar_resultados(resultados):
     if not resultados:
         return (
             "No se pudieron obtener resultados web. "
-            "No inventes información ni afirmes haber "
-            "consultado fuentes. Si la pregunta requiere "
-            "datos recientes, explica que no fue posible "
-            "verificarlos en internet."
+            "No inventes datos ni afirmes que consultaste internet. "
+            "Aclara que no fue posible verificar la información reciente."
         )
 
     texto = (
         "RESULTADOS DE BÚSQUEDA WEB:\n"
-        "Utiliza estos datos como referencias, "
-        "comprueba las fechas y no inventes información.\n\n"
+        "Utiliza estos resultados como referencias. "
+        "No inventes datos y aclara si falta información.\n\n"
     )
 
-    for numero, resultado in enumerate(
-        resultados,
-        start=1
-    ):
+    for numero, resultado in enumerate(resultados, start=1):
         texto += (
             f"{numero}. {resultado['titulo']}\n"
             f"Resumen: {resultado['resumen']}\n"
@@ -168,9 +125,47 @@ def preparar_resultados(resultados):
     return texto
 
 
-# ==================================================
-# CEREBRO PRINCIPAL DE IA TODO
-# ==================================================
+# --------------------------------------------------
+# PROCESAMIENTO DE IMÁGENES
+# --------------------------------------------------
+
+def preparar_imagen(imagen):
+    if not imagen:
+        return None
+
+    if isinstance(imagen, dict):
+        datos = imagen.get("data") or imagen.get("base64")
+        tipo = (
+            imagen.get("mime")
+            or imagen.get("mime_type")
+            or "image/jpeg"
+        )
+
+        if not isinstance(datos, str) or not datos.strip():
+            return None
+
+        if datos.startswith("data:"):
+            url_imagen = datos
+        else:
+            url_imagen = f"data:{tipo};base64,{datos}"
+
+        return {
+            "type": "image_url",
+            "image_url": {"url": url_imagen}
+        }
+
+    if isinstance(imagen, str) and imagen.startswith("data:image/"):
+        return {
+            "type": "image_url",
+            "image_url": {"url": imagen}
+        }
+
+    return None
+
+
+# --------------------------------------------------
+# ASISTENTE PRINCIPAL
+# --------------------------------------------------
 
 def preguntar(
     mensaje_usuario,
@@ -178,19 +173,13 @@ def preguntar(
     historial=None,
     imagen=None
 ):
-    """
-    Compatible con app.py:
-    preguntar(mensaje_usuario, historial=..., imagen=...)
-    """
-
     if client is None:
         return (
-            "No encuentro la clave de Groq. "
-            "Configura GROQ_API_KEY en las variables "
-            "de entorno de Render."
+            "Falta configurar GROQ_API_KEY en las variables "
+            "de entorno de Render. No publiques tu clave."
         )
 
-    mensaje_usuario = mensaje_usuario or ""
+    mensaje_usuario = str(mensaje_usuario or "").strip()
 
     if not isinstance(historial, list):
         historial = []
@@ -199,21 +188,18 @@ def preguntar(
         {
             "role": "system",
             "content": (
-                "Eres IA TODO, un asistente inteligente, "
-                "útil y claro. Responde en español por "
-                "defecto, salvo que te pidan otro idioma. "
-                "Explica las cosas paso a paso cuando "
-                "sea necesario. No inventes datos, "
-                "enlaces ni fuentes. Cuando recibas "
-                "resultados web, utiliza la información "
-                "relevante y muestra los enlaces útiles. "
-                "Si no hay resultados web, reconoce "
-                "que no pudiste verificar la actualidad."
+                "Eres IA TODO, un asistente inteligente, útil y claro. "
+                "Responde en español por defecto, salvo que el usuario "
+                "pida otro idioma. Explica paso a paso cuando sea útil. "
+                "No inventes datos, fuentes ni enlaces. "
+                "Usa los resultados web proporcionados cuando existan. "
+                "Si no pudiste verificar información actual, dilo claramente. "
+                "Respeta el contexto de la conversación."
             )
         }
     ]
 
-    # Añadir los mensajes anteriores de la conversación.
+    # Agregar historial de manera segura.
     for elemento in historial[-20:]:
         if not isinstance(elemento, dict):
             continue
@@ -231,75 +217,32 @@ def preguntar(
                 "content": texto[:10000]
             })
 
-    # Consultar internet cuando la pregunta parece requerir
-    # información reciente.
+    # Buscar información reciente cuando sea necesario.
     if necesita_busqueda(mensaje_usuario):
         resultados = buscar_web(mensaje_usuario)
-
         mensajes.append({
             "role": "system",
             "content": preparar_resultados(resultados)
         })
 
-    # Preparar el mensaje, con imagen opcional.
+    # Preparar el mensaje actual.
     contenido = []
 
-    if mensaje_usuario.strip():
+    if mensaje_usuario:
         contenido.append({
             "type": "text",
             "text": mensaje_usuario
         })
 
-    imagen_data = imagen
+    imagen_preparada = preparar_imagen(imagen)
 
-    if isinstance(imagen_data, dict):
-        datos_imagen = (
-            imagen_data.get("data")
-            or imagen_data.get("base64")
-        )
-
-        tipo_imagen = (
-            imagen_data.get("mime")
-            or imagen_data.get("mime_type")
-            or "image/jpeg"
-        )
-
-        if isinstance(datos_imagen, str) and datos_imagen:
-            if datos_imagen.startswith("data:"):
-                if "," in datos_imagen:
-                    datos_imagen = datos_imagen.split(
-                        ",",
-                        1
-                    )[1]
-
-            contenido.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": (
-                        f"data:{tipo_imagen};base64,"
-                        f"{datos_imagen}"
-                    )
-                }
-            })
-
-    elif (
-        isinstance(imagen_data, str)
-        and imagen_data.startswith("data:image/")
-    ):
-        contenido.append({
-            "type": "image_url",
-            "image_url": {
-                "url": imagen_data
-            }
-        })
+    if imagen_preparada:
+        contenido.append(imagen_preparada)
 
     if not contenido:
         contenido.append({
             "type": "text",
-            "text": (
-                "Ayuda al usuario con la información "
-                "que haya proporcionado."
-            )
+            "text": "Ayuda al usuario con su solicitud."
         })
 
     mensajes.append({
@@ -307,14 +250,10 @@ def preguntar(
         "content": contenido
     })
 
-    # Seleccionar un modelo según el contenido.
-    tiene_imagen = any(
-        elemento.get("type") == "image_url"
-        for elemento in contenido
-    )
-
+    tiene_imagen = imagen_preparada is not None
     modelo = VISION_MODEL if tiene_imagen else TEXT_MODEL
 
+    # Consultar Groq y mostrar errores comprensibles.
     try:
         respuesta = client.chat.completions.create(
             model=modelo,
@@ -323,38 +262,55 @@ def preguntar(
             max_tokens=1800
         )
 
-        texto_respuesta = (
-            respuesta.choices[0].message.content
-        )
+        texto = respuesta.choices[0].message.content
 
-        return texto_respuesta or (
-            "No pude generar una respuesta."
-        )
+        if isinstance(texto, str) and texto.strip():
+            return texto.strip()
 
-  
-except Exception as e:
-    codigo = getattr(e, "status_code", None)
+        return "Groq respondió, pero no devolvió texto."
 
-    if codigo == 401:
-        return "Error 401: la clave GROQ_API_KEY es inválida o no está configurada correctamente. Revisa las variables de entorno de Render."
+    except Exception as error:
+        codigo = getattr(error, "status_code", None)
+        logger.exception("Error al consultar Groq")
 
-    elif codigo == 403:
-        return "Error 403: Groq rechazó la solicitud por permisos o restricciones de la cuenta."
+        if codigo == 401:
+            return (
+                "Error 401: Groq rechazó la clave API. "
+                "Revisa GROQ_API_KEY en las variables de Render."
+            )
 
-    elif codigo == 404:
-        return f"Error 404: el modelo '{modelo}' no está disponible. Revisa GROQ_TEXT_MODEL o GROQ_VISION_MODEL en Render."
+        if codigo == 403:
+            return (
+                "Error 403: tu cuenta no tiene permiso para esta solicitud. "
+                "Revisa las restricciones de Groq."
+            )
 
-    elif codigo == 429:
-        return "Error 429: alcanzaste un límite de uso de Groq. Espera a que se restablezca el límite y revisa tu cuenta de Groq."
+        if codigo == 404:
+            return (
+                f"Error 404: el modelo '{modelo}' no está disponible "
+                "o no tienes acceso a él. Revisa los modelos de Groq."
+            )
 
-    elif codigo == 400:
-        return "Error 400: Groq rechazó la solicitud. Puede haber un problema con el formato del mensaje, la imagen o los parámetros."
+        if codigo == 429:
+            return (
+                "Error 429: se alcanzó un límite de uso de Groq. "
+                "Espera a que se restablezca o revisa la cuota de tu cuenta."
+            )
 
-    elif codigo and codigo >= 500:
-        return f"Error {codigo}: Groq tiene un problema temporal. Inténtalo de nuevo más tarde."
+        if codigo == 400:
+            return (
+                "Error 400: Groq rechazó el formato de la solicitud. "
+                "Si enviaste una imagen, comprueba que el modelo de visión "
+                "la admita."
+            )
 
-    else:
-        print("Error interno de Groq:", repr(e))
-        return "No se pudo conectar con Groq. Revisa los registros de Render para identificar el error exacto."
+        if codigo and codigo >= 500:
+            return (
+                f"Error {codigo}: Groq tiene un problema temporal. "
+                "Inténtalo de nuevo más tarde."
+            )
 
+        return (
+            "No se pudo conectar con Groq. "
+            "Revisa los registros de Render para conocer el error exacto."
         )
