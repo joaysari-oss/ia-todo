@@ -1,258 +1,33 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#7c5cff">
+<meta name="description" content="IA TODO: tu asistente de inteligencia artificial">
+<link rel="manifest" href="/manifest.json">
 <title>IA TODO — Tu asistente para todo</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-:root{--bg:#0a0a12;--surface:#12121e;--surface2:#1a1a2a;--border:rgba(255,255,255,.08);--text:#e8e8f0;--muted:#8888a0;--accent:#7c5cff;--accent2:#00d4ff;--ok:#00e5a0;--danger:#ff5c7a}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(18,18,30,.9);border-bottom:1px solid var(--border)}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem}
-.brand h1{font-size:1.15rem;font-weight:700}.brand p{font-size:.75rem;color:var(--muted)}
-.status{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--ok);background:rgba(0,229,160,.1);padding:6px 12px;border-radius:20px;border:1px solid rgba(0,229,160,.2)}
-.dot-ok{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.status.off{color:#ffb84d;background:rgba(255,184,77,.1);border-color:rgba(255,184,77,.25)}.status.off .dot-ok{background:#ffb84d}
-#chat{flex:1;overflow-y:auto;padding:20px 16px 12px;display:flex;flex-direction:column;gap:16px}
-.msg{max-width:88%;display:flex;gap:10px}
-.msg.user{align-self:flex-end;flex-direction:row-reverse}
-.avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.msg.bot .avatar{background:linear-gradient(135deg,var(--accent),var(--accent2))}
-.msg.user .avatar{background:var(--surface2);border:1px solid var(--border)}
-.bubble{padding:12px 16px;border-radius:16px;line-height:1.55;font-size:.95rem;white-space:pre-wrap;word-break:break-word}
-.msg.bot .bubble{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}
-.msg.user .bubble{background:linear-gradient(135deg,#5a3fd4,var(--accent));border-bottom-right-radius:4px;color:#fff}
-.bubble code{background:rgba(255,255,255,.1);padding:1px 6px;border-radius:5px;font-size:.88em}
-.bubble pre{background:#07070d;border:1px solid var(--border);padding:10px;border-radius:10px;overflow-x:auto;margin:6px 0;font-size:.85rem}
-.source{margin-top:8px;font-size:.78rem;color:var(--muted)}.source a{color:#8ab4f8;text-decoration:none}
-.media-preview{max-width:220px;border-radius:10px;margin-top:6px;display:block}
-.typing{display:none;gap:10px;padding:0 16px 10px}.typing.show{display:flex}
-.typing .bubble{display:flex;gap:5px;padding:14px 18px;background:var(--surface);border:1px solid var(--border)}
-.typing .d{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:b 1.2s infinite}
-.typing .d:nth-child(3){animation-delay:.15s}.typing .d:nth-child(4){animation-delay:.3s}
-@keyframes b{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
-.input-area{padding:10px 14px 16px;background:rgba(18,18,30,.95);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
-.tools{display:flex;gap:8px;padding:0 4px}
-.tool-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:1.1rem;cursor:pointer}
-.tool-btn:hover,.tool-btn.on{background:rgba(124,92,255,.25);border-color:rgba(124,92,255,.5);color:#fff}
-.tool-btn.rec{background:rgba(255,92,122,.25);border-color:var(--danger)}
-.tool-btn:focus-visible,#send:focus-visible,.chip:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
-.input-row{display:flex;gap:10px;align-items:flex-end}
-.input-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 4px 4px 16px;display:flex}
-.input-wrap:focus-within{border-color:rgba(124,92,255,.5)}
-#input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:inherit;font-size:.95rem;padding:10px 0;max-height:120px;resize:none;line-height:1.4}
-#send{width:44px;height:44px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--accent),#5a3fd4);color:#fff;font-size:1.2rem;cursor:pointer}
-#send:disabled{opacity:.5;cursor:not-allowed}
-.suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.chip{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:8px 14px;border-radius:20px;font-size:.82rem;cursor:pointer}
-.chip:hover{background:rgba(124,92,255,.2);color:#fff}
-input[type=file]{display:none}
-@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+:root{--bg:#0a0a12;--surface:#12121e;--surface2:#1a1a2a;--border:rgba(255,255,255,.09);--text:#e8e8f0;--muted:#8888a0;--accent:#7c5cff;--accent2:#00d4ff;--ok:#00e5a0;--danger:#ff5c7a}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+header{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;background:rgba(18,18,30,.96);border-bottom:1px solid var(--border);gap:10px}.brand{display:flex;align-items:center;gap:12px}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:1.4rem}.brand h1{font-size:1.1rem;margin:0}.brand p{font-size:.75rem;color:var(--muted);margin:4px 0 0}.status{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--ok);background:rgba(0,229,160,.08);padding:7px 11px;border-radius:20px;border:1px solid rgba(0,229,160,.2);white-space:nowrap}.dot{width:7px;height:7px;border-radius:50%;background:currentColor}.status.off{color:#ffb84d;border-color:rgba(255,184,77,.3)}
+#chat{flex:1;overflow-y:auto;padding:22px max(14px,calc((100% - 900px)/2)) 18px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}.msg{max-width:100%;display:flex;gap:10px;align-items:flex-start}.msg.user{align-self:flex-end;flex-direction:row-reverse;max-width:90%}.avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--accent2))}.msg.user .avatar{background:var(--surface2);border:1px solid var(--border)}.bubble{max-width:min(760px,calc(100vw - 90px));padding:12px 15px;border-radius:16px;line-height:1.58;font-size:.94rem;white-space:pre-wrap;overflow-wrap:anywhere}.msg.bot .bubble{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:4px}.msg.user .bubble{background:linear-gradient(135deg,#5a3fd4,var(--accent));border-bottom-right-radius:4px;color:white}.bubble pre{white-space:pre;overflow-x:auto;background:#07070d;border:1px solid var(--border);padding:12px;border-radius:10px;font-size:.85rem}.bubble code{background:rgba(255,255,255,.1);padding:1px 5px;border-radius:4px}.bubble a{color:#9ddcff}.generated-image{display:block;width:100%;max-width:640px;height:auto;margin:12px 0;border-radius:12px;border:1px solid var(--border);background:#090912}.image-loading{color:var(--muted);font-size:.85rem}.media-preview{max-width:min(360px,100%);max-height:360px;object-fit:contain;border-radius:10px;margin-top:8px;display:block}.source{margin-top:9px;font-size:.8rem;color:var(--muted)}.suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}.chip{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:8px 12px;border-radius:20px;font-size:.82rem;cursor:pointer}.chip:hover,.tool-btn:hover{border-color:rgba(124,92,255,.6);color:#fff;background:rgba(124,92,255,.18)}
+.typing{display:none;gap:10px;padding:0 16px 10px}.typing.show{display:flex}.typing .bubble{display:flex;gap:5px;background:var(--surface);border:1px solid var(--border)}.typing .d{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:b 1.2s infinite}.typing .d:nth-child(2){animation-delay:.15s}.typing .d:nth-child(3){animation-delay:.3s}@keyframes b{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.input-area{padding:10px max(12px,calc((100% - 900px)/2)) 15px;background:rgba(18,18,30,.97);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:9px}.tools{display:flex;gap:8px;flex-wrap:wrap}.tool-btn{width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:1.05rem;cursor:pointer}.tool-btn.on{background:rgba(124,92,255,.25);border-color:rgba(124,92,255,.6);color:white}.input-row{display:flex;gap:10px;align-items:flex-end}.input-wrap{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 12px 4px 15px;display:flex}.input-wrap:focus-within{border-color:rgba(124,92,255,.7)}#input{flex:1;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:.95rem;padding:10px 0;max-height:130px;resize:none;line-height:1.4}#send{width:46px;height:46px;border-radius:12px;border:0;background:linear-gradient(135deg,var(--accent),#5a3fd4);color:white;font-size:1.2rem;cursor:pointer}#send:disabled{opacity:.5;cursor:not-allowed}.hint{font-size:.72rem;color:var(--muted);text-align:center}input[type=file]{display:none}button:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+@media(max-width:600px){header{padding:10px 12px}.brand h1{font-size:1rem}.brand p{font-size:.68rem}.logo{width:37px;height:37px}.status{font-size:.7rem;padding:6px 8px}#chat{padding:15px 10px}.bubble{font-size:.9rem;max-width:calc(100vw - 70px)}.msg.user{max-width:95%}.input-area{padding:9px 10px 12px}.tools{gap:6px}.tool-btn{width:36px;height:36px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<header>
-  <div class="brand"><div class="logo">∞</div><div><h1>IA TODO</h1><p>Tu asistente para todo tipo de cosas</p></div></div>
-  <div class="status" id="status"><div class="dot-ok"></div><span id="statusTxt">En línea</span></div>
-</header>
-<div id="chat"></div>
-<div class="typing" id="typing"><div class="avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">∞</div><div class="bubble"><div class="d"></div><div class="d"></div><div class="d"></div></div></div>
-<div class="input-area">
-  <div class="tools">
-    <button class="tool-btn" id="btnMic" title="Hablar">🎤</button>
-    <button class="tool-btn" id="btnCamera" title="Enviar foto">📷</button>
-    <button class="tool-btn" id="btnFile" title="Enviar documento (txt, md, csv, json)">📄</button>
-    <button class="tool-btn" id="btnVoz" title="Leer respuestas en voz alta">🔊</button>
-    <button class="tool-btn" id="btnNuevo" title="Nueva conversación">🗑️</button>
-  </div>
-  <div class="input-row">
-    <div class="input-wrap"><textarea id="input" rows="1" placeholder="Pregúntame o habla..." autofocus></textarea></div>
-    <button id="send" title="Enviar">➤</button>
-  </div>
-</div>
-<input type="file" id="fileInput" accept=".txt,.md,.csv,.json" />
-<input type="file" id="cameraInput" accept="image/*" capture="environment" />
-
-<script>
-const $ = s => document.querySelector(s);
-const chat = $('#chat'), input = $('#input'), sendBtn = $('#send'), typing = $('#typing');
-let historia = [];            // [{rol:'user'|'bot', texto, ver?}]
-let voz = localStorage.getItem('iatodo_voz') === '1';
-let ocupado = false;
-
-try { historia = JSON.parse(localStorage.getItem('iatodo') || '[]'); } catch (e) {}
-const guardar = () => { try { localStorage.setItem('iatodo', JSON.stringify(historia.slice(-40))); } catch (e) {} };
-const norm = t => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-const esc = t => t.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-const fmt = t => esc(t)
-  .replace(/```(?:\w+)?\n?([\s\S]*?)```/g, '<pre>$1</pre>')
-  .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-  .replace(/`([^`\n]+)`/g, '<code>$1</code>');
-const delay = ms => new Promise(r => setTimeout(r, ms));
-
-function addMsg(texto, tipo = 'bot', extra = {}) {
-  const div = document.createElement('div');
-  div.className = 'msg ' + tipo;
-  const av = document.createElement('div');
-  av.className = 'avatar'; av.textContent = tipo === 'user' ? '👤' : '∞';
-  const b = document.createElement('div');
-  b.className = 'bubble';
-  if (tipo === 'bot') b.innerHTML = fmt(texto); else b.textContent = texto;
-  if (extra.img) { const i = document.createElement('img'); i.src = extra.img; i.className = 'media-preview'; i.alt = 'Imagen enviada'; b.appendChild(i); }
-  if (extra.fuente) {
-    const s = document.createElement('div'); s.className = 'source';
-    const a = document.createElement('a'); a.href = extra.fuente; a.target = '_blank'; a.rel = 'noopener'; a.textContent = extra.titulo + ' — Wikipedia';
-    s.append('Fuente: ', a); b.appendChild(s);
-  }
-  div.append(av, b); chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function hablar(t) {
-  if (!voz || !('speechSynthesis' in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(t.replace(/[*`#]/g, ''));
-  u.lang = 'es-CO'; speechSynthesis.speak(u);
-}
-
-// ---------- Respuestas locales (solo casos exactos, sin falsos positivos) ----------
-function rapida(texto) {
-  const n = norm(texto).replace(/[¿?¡!.,]/g, '').trim();
-  if (n.split(/\s+/).length <= 3 && /^(hola|hey|buenas|buenos dias|buenas tardes|buenas noches|saludos|hello|hi|que tal)$/.test(n))
-    return '¡Hola! Soy IA TODO. Pregúntame lo que quieras, envíame una foto o un documento, o háblame con el micrófono.';
-  if (/(quien te (creo|hizo|programo|desarrollo|invento)|quien es tu (creador|autor))/.test(n))
-    return 'Mi creador es Joao.';
-  if (/^(que hora es|que dia es hoy|que dia es|que fecha es|fecha de hoy|que fecha es hoy)$/.test(n))
-    return 'Ahora mismo es: ' + new Date().toLocaleString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const expr = texto.replace(/[x×]/gi, '*').replace(/÷/g, '/').replace(/,/g, '.').trim();
-  if (/^[\d\s+\-*/().]+$/.test(expr) && /\d\s*[+\-*/]\s*[\d(]/.test(expr)) {
-    try { const r = Function('"use strict";return(' + expr + ')')(); if (isFinite(r)) return 'El resultado es: ' + r; } catch (e) {}
-  }
-  return null;
-}
-
-// ---------- Respaldo: Wikipedia ----------
-async function wiki(q) {
-  for (const l of ['es', 'en']) {
-    try {
-      const s = await (await fetch(`https://${l}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(q)}&limit=1&namespace=0&format=json&origin=*`)).json();
-      if (!s[1] || !s[1][0]) continue;
-      const d = await (await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(s[1][0])}`)).json();
-      if (d.extract && d.type !== 'disambiguation')
-        return { texto: d.extract.slice(0, 900), fuente: d.content_urls.desktop.page, titulo: d.title };
-    } catch (e) {}
-  }
-  return null;
-}
-
-let aiDisponible = true;
-function estado(ok) {
-  aiDisponible = ok;
-  $('#status').classList.toggle('off', !ok);
-  $('#statusTxt').textContent = ok ? 'IA activa' : 'Modo básico';
-}
-
-async function responder(texto, imagen) {
-  if (!imagen) { const r = rapida(texto); if (r) return { texto: r }; }
-  let aviso = '';
-  try {
-    const res = await fetch('/api/chat', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ historial: historia.slice(-12).map(m => ({ rol: m.rol, texto: m.texto })), imagen })
-    });
-    if (res.ok) { const d = await res.json(); if (d.texto) { estado(true); return { texto: d.texto }; } }
-    estado(false);
-    if (res.status === 429) aviso = 'Se agotó la cuota gratis de la IA por ahora. Te respondo con Wikipedia.\n\n';
-  } catch (e) { estado(false); }
-  if (imagen) return { texto: 'Para analizar fotos necesito la IA conectada. Descríbeme la imagen y te ayudo.' };
-  const q = texto.replace(/^(que es|quien es|quien fue|explica|explicame|dime|define|busca)\s+/i, '').replace(/\?+$/, '').trim();
-  const w = await wiki(q || texto);
-  if (w) return { texto: aviso + w.texto, fuente: w.fuente, titulo: w.titulo };
-  return { texto: aviso + `No encontré un resultado claro sobre "${texto}". ¿Puedes reformular la pregunta?` };
-}
-
-async function enviar(texto, { ver, imagen, img } = {}) {
-  texto = (texto || '').trim();
-  if (!texto || ocupado) return;
-  ocupado = true; sendBtn.disabled = true;
-  input.value = ''; input.style.height = 'auto';
-  historia.push({ rol: 'user', texto, ver });
-  addMsg(ver || texto, 'user', { img });
-  typing.classList.add('show'); chat.scrollTop = chat.scrollHeight;
-  const r = await responder(texto, imagen);
-  typing.classList.remove('show');
-  historia.push({ rol: 'bot', texto: r.texto });
-  addMsg(r.texto, 'bot', r); hablar(r.texto); guardar();
-  ocupado = false; sendBtn.disabled = false; input.focus();
-}
-
-sendBtn.onclick = () => enviar(input.value);
-input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(input.value); } });
-input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; });
-
-// ---------- Micrófono ----------
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (SR) {
-  const rec = new SR(); rec.lang = 'es-CO'; rec.interimResults = false;
-  rec.onstart = () => $('#btnMic').classList.add('rec');
-  rec.onend = () => $('#btnMic').classList.remove('rec');
-  rec.onresult = e => enviar(e.results[0][0].transcript);
-  rec.onerror = e => { if (e.error === 'not-allowed') addMsg('No tengo permiso para usar el micrófono. Actívalo en el navegador.'); };
-  $('#btnMic').onclick = () => { try { $('#btnMic').classList.contains('rec') ? rec.stop() : rec.start(); } catch (e) {} };
-} else $('#btnMic').onclick = () => addMsg('Tu navegador no soporta voz. Prueba Chrome o Edge.');
-
-// ---------- Fotos (se reducen antes de enviar) ----------
-$('#btnCamera').onclick = () => $('#cameraInput').click();
-$('#cameraInput').onchange = e => {
-  const f = e.target.files[0]; if (!f) return;
-  const rd = new FileReader();
-  rd.onload = ev => {
-    const im = new Image();
-    im.onload = () => {
-      const k = Math.min(1, 1024 / Math.max(im.width, im.height));
-      const c = document.createElement('canvas'); c.width = im.width * k; c.height = im.height * k;
-      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
-      const url = c.toDataURL('image/jpeg', 0.8);
-      enviar(input.value.trim() || 'Describe esta imagen y dime qué ves.',
-        { ver: '📷 Foto enviada', img: url, imagen: { mime: 'image/jpeg', data: url.split(',')[1] } });
-    };
-    im.src = ev.target.result;
-  };
-  rd.readAsDataURL(f); e.target.value = '';
-};
-
-// ---------- Documentos de texto ----------
-$('#btnFile').onclick = () => $('#fileInput').click();
-$('#fileInput').onchange = e => {
-  const f = e.target.files[0]; if (!f) return;
-  const rd = new FileReader();
-  rd.onload = ev => {
-    const pregunta = input.value.trim() || 'Resume este documento.';
-    enviar(`Documento "${f.name}":\n${String(ev.target.result).slice(0, 6000)}\n\n${pregunta}`, { ver: '📄 ' + f.name + ' — ' + pregunta });
-  };
-  rd.readAsText(f); e.target.value = '';
-};
-
-// ---------- Voz de respuesta y nueva conversación ----------
-const pintarVoz = () => $('#btnVoz').classList.toggle('on', voz);
-$('#btnVoz').onclick = () => { voz = !voz; localStorage.setItem('iatodo_voz', voz ? '1' : '0'); if (!voz) speechSynthesis.cancel(); pintarVoz(); };
-$('#btnNuevo').onclick = () => { historia = []; guardar(); chat.innerHTML = ''; inicio(); };
-pintarVoz();
-
-function inicio() {
-  if (historia.length) { historia.forEach(m => addMsg(m.ver || m.texto, m.rol)); return; }
-  addMsg('¡Hola! Soy IA TODO.\n\nPuedo conversar, explicar temas, analizar fotos 📷, leer documentos de texto 📄 y escucharte 🎤. Recuerdo lo que hemos hablado en esta conversación.\n\nPregúntame lo que necesites.');
-  const s = document.createElement('div'); s.className = 'suggestions';
-  ['¿Qué es la inteligencia artificial?', 'Explícame el Sistema Solar', '¿Quién fue Marie Curie?', 'Dame ideas para una clase de inglés'].forEach(t => {
-    const c = document.createElement('button'); c.className = 'chip'; c.textContent = t;
-    c.onclick = () => { s.remove(); enviar(t); }; s.appendChild(c);
-  });
-  chat.appendChild(s);
-}
-inicio();
-</script>
+<header><div class="brand"><div class="logo">∞</div><div><h1>IA TODO</h1><p>Tu asistente para todo tipo de cosas</p></div></div><div class="status" id="status"><span class="dot"></span><span id="statusTxt">Conectando…</span></div></header>
+<main id="chat" aria-live="polite"></main>
+<div class="typing" id="typing"><div class="avatar">∞</div><div class="bubble"><span class="d"></span><span class="d"></span><span class="d"></span></div></div>
+<div class="input-area"><div class="tools">
+<button class="tool-btn" id="btnMic" title="Hablar" aria-label="Hablar">🎤</button><button class="tool-btn" id="btnCamera" title="Tomar o enviar foto" aria-label="Tomar foto">📷</button><button class="tool-btn" id="btnFile" title="Adjuntar documento de texto" aria-label="Adjuntar documento">📄</button><button class="tool-btn" id="btnVoz" title="Leer respuestas en voz alta" aria-label="Voz">🔊</button><button class="tool-btn" id="btnNuevo" title="Nueva conversación" aria-label="Nueva conversación">🗑️</button>
+</div><div class="input-row"><div class="input-wrap"><textarea id="input" rows="1" placeholder="Pregúntame, pide una imagen o escribe ‘busca en internet…’" autofocus></textarea></div><button id="send" title="Enviar" aria-label="Enviar">➤</button></div><div class="hint">IA TODO puede cometer errores. No compartas contraseñas ni datos privados.</div></div>
+<input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.py,.html,.css,.js,.xml,.yaml,.yml,.log,text/plain,text/csv,application/json">
+<input type="file" id="cameraInput" accept="image/*" capture="environment">
+<script src="/static/script.js" defer></script>
 </body>
 </html>
