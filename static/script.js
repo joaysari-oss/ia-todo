@@ -1,421 +1,394 @@
-'use strict';
-const $ = (selector) => document.querySelector(selector);
-const chat = $('#chat');
-const input = $('#input');
-const sendBtn = $('#send');
-const typing = $('#typing');
-const historyKey = 'iatodo';
-let history = [];
-let busy = false;
-let voiceEnabled = localStorage.getItem('iatodo_voz') === '1';
+
+"use strict";
+
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "iatodo_chats_v2";
+
+let chats = [];
+let activeChatId = null;
+let attachedImage = null;
+let attachedText = "";
+let lastAnswer = "";
 
 try {
-  const saved = JSON.parse(localStorage.getItem(historyKey) || '[]');
-  if (Array.isArray(saved)) history = saved;
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    if (Array.isArray(saved)) {
+        chats = saved.filter(c => c && c.id && Array.isArray(c.messages));
+    }
 } catch (_) {
-  history = [];
+    chats = [];
 }
 
-const escapeHTML = (value) => String(value).replace(/[&<>"']/g, ch => ({
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;'
-}[ch]));
-
-function formatMessage(value) {
-  let html = escapeHTML(value);
-
-  // Solo muestra imágenes de los proveedores previstos.
-  html = html.replace(
-    /!\[([^\]]*)\]\((https:\/\/(?:image\.pollinations\.ai|gen\.pollinations\.ai)\/[^\s)]+)\)/g,
-    (_all, alt, url) =>
-      `<img class="generated-image" src="${url}" alt="${alt}" loading="lazy" referrerpolicy="no-referrer"><div class="image-loading" hidden>La imagen no se pudo cargar. Abre el enlace de abajo o inténtalo más tarde.</div>`
-  );
-
-  html = html.replace(
-    /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g,
-    (_all, label, url) =>
-      `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`
-  );
-
-  html = html.replace(
-    /```([a-zA-Z0-9_-]*)\n?([\s\S]*?)```/g,
-    (_all, _lang, code) => `<pre><code>${code}</code></pre>`
-  );
-
-  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/(^|\n)\* (.+)/g, '$1• $2');
-
-  return html.replace(/\n/g, '<br>');
+function makeId() {
+    return Date.now().toString(36) +
+        Math.random().toString(36).slice(2, 8);
 }
 
-function addMessage(text, role = 'bot', extra = {}) {
-  const row = document.createElement('div');
-  row.className = `msg ${role === 'user' ? 'user' : 'bot'}`;
-
-  const avatar = document.createElement('div');
-  avatar.className = 'avatar';
-  avatar.textContent = role === 'user' ? '👤' : '∞';
-
-  const bubble = document.createElement('div');
-  bubble.className = 'bubble';
-
-  if (role === 'user') {
-    bubble.textContent = text || 'Adjunto enviado';
-  } else {
-    bubble.innerHTML = formatMessage(text || '');
-  }
-
-  if (extra.image) {
-    const img = document.createElement('img');
-    img.src = extra.image;
-    img.className = 'media-preview';
-    img.alt = 'Imagen adjunta';
-    bubble.appendChild(img);
-  }
-
-  bubble.querySelectorAll('.generated-image').forEach(img => {
-    img.addEventListener('error', () => {
-      const notice = img.nextElementSibling;
-      if (notice) notice.hidden = false;
-    });
-  });
-
-  row.append(avatar, bubble);
-  chat.appendChild(row);
-  chat.scrollTop = chat.scrollHeight;
-  return row;
+function saveChats() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
 }
 
-function saveHistory() {
-  try {
-    localStorage.setItem(historyKey, JSON.stringify(history.slice(-60)));
-  } catch (_) {}
+function currentChat() {
+    return chats.find(c => c.id === activeChatId);
 }
 
-function setStatus(ok, label) {
-  $('#status').classList.toggle('off', !ok);
-  $('#statusTxt').textContent = label || (ok ? 'IA activa' : 'Modo básico');
+function createChat() {
+    const chat = {
+        id: makeId(),
+        title: "Nueva conversación",
+        messages: [],
+        createdAt: Date.now()
+    };
+
+    chats.unshift(chat);
+    activeChatId = chat.id;
+    saveChats();
+    renderAll();
+    $("messageInput").focus();
 }
 
-function sayAloud(text) {
-  if (!voiceEnabled || !('speechSynthesis' in window)) return;
-
-  speechSynthesis.cancel();
-
-  const utterance = new SpeechSynthesisUtterance(
-    String(text)
-      .replace(/!\[[^\]]*\]\([^)]*\)/g, 'imagen generada')
-      .replace(/https?:\/\/\S+/g, '')
-      .replace(/[*`#]/g, '')
-  );
-
-  utterance.lang = 'es-CO';
-  speechSynthesis.speak(utterance);
+function ensureChat() {
+    if (!currentChat()) createChat();
+    return currentChat();
 }
 
-function welcome() {
-  addMessage(
-    '¡Hola! Soy IA TODO.\n\nPuedo conversar, ayudarte a investigar, crear imágenes (si el servicio externo está disponible), analizar fotos con un modelo compatible y leer documentos de texto.\n\n¿En qué te ayudo?'
-  );
-
-  const suggestions = document.createElement('div');
-  suggestions.className = 'suggestions';
-
-  [
-    'Explícame la inteligencia artificial',
-    'Busca en internet noticias sobre tecnología',
-    'Crea una imagen de un dragón azul',
-    'Resume este tema paso a paso'
-  ].forEach(label => {
-    const button = document.createElement('button');
-    button.className = 'chip';
-    button.textContent = label;
-    button.addEventListener('click', () => {
-      suggestions.remove();
-      sendMessage(label);
-    });
-    suggestions.appendChild(button);
-  });
-
-  chat.appendChild(suggestions);
+function makeTitle(text) {
+    const title = text.replace(/\s+/g, " ").trim();
+    if (!title) return "Nueva conversación";
+    return title.length > 38 ? title.slice(0, 38) + "…" : title;
 }
 
 function renderHistory() {
-  chat.innerHTML = '';
+    const list = $("chatList");
+    list.replaceChildren();
 
-  if (!history.length) {
-    welcome();
-    return;
-  }
+    chats.forEach(chat => {
+        const row = document.createElement("div");
+        row.className = "chat-row" +
+            (chat.id === activeChatId ? " active" : "");
 
-  history.forEach(item => {
-    addMessage(
-      item.texto || item.content || '',
-      (item.rol === 'user' || item.role === 'user') ? 'user' : 'bot',
-      item.img ? {image: item.img} : {}
-    );
-  });
+        const open = document.createElement("button");
+        open.className = "chat-open";
+        open.textContent = chat.title;
+        open.title = chat.title;
+        open.onclick = () => {
+            activeChatId = chat.id;
+            renderAll();
+        };
+
+        const share = document.createElement("button");
+        share.className = "icon-btn";
+        share.textContent = "↗";
+        share.title = "Compartir conversación";
+        share.onclick = () => shareChat(chat);
+
+        const remove = document.createElement("button");
+        remove.className = "icon-btn";
+        remove.textContent = "🗑";
+        remove.title = "Eliminar esta conversación";
+
+        remove.onclick = () => {
+            if (!confirm("¿Eliminar solamente esta conversación?")) return;
+
+            chats = chats.filter(c => c.id !== chat.id);
+
+            if (activeChatId === chat.id) {
+                activeChatId = chats[0]?.id || null;
+            }
+
+            saveChats();
+            renderAll();
+        };
+
+        row.append(open, share, remove);
+        list.appendChild(row);
+    });
 }
 
-async function sendToServer(message, imageData) {
-  const payload = {
-    mensaje: message,
-    historial: history.slice(-14).map(item => ({
-      rol: item.rol,
-      texto: item.texto
-    })),
-    imagen: imageData || null
-  };
+function renderMessages() {
+    const container = $("messages");
+    container.replaceChildren();
 
-  const response = await fetch('/api/chat', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  });
+    const chat = currentChat();
+    $("currentTitle").textContent =
+        chat?.title || "Nueva conversación";
 
-  let data = {};
-  try {
-    data = await response.json();
-  } catch (_) {}
+    if (!chat || chat.messages.length === 0) {
+        const welcome = document.createElement("div");
+        welcome.className = "welcome";
 
-  if (!response.ok) {
-    throw new Error(data.error || `Error del servidor (${response.status})`);
-  }
+        const title = document.createElement("h1");
+        title.textContent = "¿En qué te ayudo hoy?";
 
-  return data;
-}
+        const description = document.createElement("p");
+        description.textContent =
+            "Pregunta, escribe o adjunta una imagen.";
 
-async function sendMessage(text = input.value, options = {}) {
-  text = String(text || '').trim();
-
-  if ((!text && !options.imageData && !options.fileText) || busy) return;
-
-  if (options.fileText) {
-    text = `${text || 'Resume y explica este documento.'}\n\nContenido del archivo «${options.fileName || 'documento'}»:\n${options.fileText.slice(0, 12000)}`;
-  }
-
-  busy = true;
-  sendBtn.disabled = true;
-  input.value = '';
-  input.style.height = 'auto';
-
-  const visible = options.visibleText || text || 'Describe esta imagen.';
-
-  history.push({
-    rol: 'user',
-    texto: visible,
-    img: options.previewImage || undefined
-  });
-
-  addMessage(
-    visible,
-    'user',
-    options.previewImage ? {image: options.previewImage} : {}
-  );
-
-  typing.classList.add('show');
-  chat.scrollTop = chat.scrollHeight;
-
-  try {
-    const data = await sendToServer(
-      text || 'Describe esta imagen.',
-      options.imageData || null
-    );
-
-    const answer = data.texto || data.respuesta || 'No recibí una respuesta.';
-
-    setStatus(true, data.modo_creador ? 'Modo creador' : 'IA activa');
-    history.push({rol: 'bot', texto: answer});
-    addMessage(answer, 'bot');
-    sayAloud(answer);
-    saveHistory();
-
-  } catch (error) {
-    setStatus(false, 'Error de conexión');
-
-    const errorMessage =
-      `No pude conectar con el servidor: ${error.message}\n\n` +
-      'Comprueba que el alojamiento esté activo y que GROQ_API_KEY esté configurada en sus variables de entorno.';
-
-    history.push({rol: 'bot', texto: errorMessage});
-    addMessage(errorMessage, 'bot');
-    saveHistory();
-
-  } finally {
-    typing.classList.remove('show');
-    busy = false;
-    sendBtn.disabled = false;
-    input.focus();
-  }
-}
-
-sendBtn.addEventListener('click', () => sendMessage());
-
-input.addEventListener('keydown', event => {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault();
-    sendMessage();
-  }
-});
-
-input.addEventListener('input', () => {
-  input.style.height = 'auto';
-  input.style.height = Math.min(input.scrollHeight, 130) + 'px';
-});
-
-$('#btnNuevo').addEventListener('click', () => {
-  if (busy) return;
-  history = [];
-  saveHistory();
-  chat.innerHTML = '';
-  welcome();
-  input.focus();
-});
-
-$('#btnVoz').classList.toggle('on', voiceEnabled);
-
-$('#btnVoz').addEventListener('click', () => {
-  voiceEnabled = !voiceEnabled;
-  localStorage.setItem('iatodo_voz', voiceEnabled ? '1' : '0');
-  $('#btnVoz').classList.toggle('on', voiceEnabled);
-
-  if (!voiceEnabled && 'speechSynthesis' in window) {
-    speechSynthesis.cancel();
-  }
-});
-
-// Micrófono del navegador.
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-if (SpeechRecognition) {
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'es-CO';
-  recognition.interimResults = false;
-  recognition.continuous = false;
-
-  recognition.onstart = () => $('#btnMic').classList.add('on');
-  recognition.onend = () => $('#btnMic').classList.remove('on');
-
-  recognition.onresult = event => {
-    input.value = event.results[0][0].transcript;
-    sendMessage();
-  };
-
-  recognition.onerror = event => {
-    if (event.error === 'not-allowed') {
-      addMessage('Permite el uso del micrófono en tu navegador para dictar preguntas.');
+        welcome.append(title, description);
+        container.appendChild(welcome);
+        return;
     }
-  };
 
-  $('#btnMic').addEventListener('click', () => {
-    try {
-      recognition.start();
-    } catch (_) {}
-  });
+    chat.messages.forEach(message => {
+        const bubble = document.createElement("div");
+        bubble.className = "bubble " +
+            (message.rol === "user" ? "user" : "assistant");
 
-} else {
-  $('#btnMic').addEventListener('click', () => {
-    addMessage('Tu navegador no tiene reconocimiento de voz disponible. Prueba Chrome o Edge.');
-  });
+        bubble.textContent = message.texto;
+        container.appendChild(bubble);
+    });
+
+    container.scrollTop = container.scrollHeight;
 }
 
-// Foto: reducir el tamaño para no enviar cargas enormes.
-$('#btnCamera').addEventListener('click', () => $('#cameraInput').click());
+function renderAll() {
+    renderHistory();
+    renderMessages();
+}
 
-$('#cameraInput').addEventListener('change', event => {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
+function addMessage(rol, texto) {
+    const chat = ensureChat();
 
-  const reader = new FileReader();
+    chat.messages.push({ rol, texto });
 
-  reader.onload = e => {
-    const image = new Image();
+    if (rol === "user" && chat.title === "Nueva conversación") {
+        chat.title = makeTitle(texto);
+    }
 
-    image.onload = () => {
-      const scale = Math.min(
-        1,
-        1024 / Math.max(image.width, image.height)
-      );
+    saveChats();
+    renderAll();
+}
 
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(image.width * scale);
-      canvas.height = Math.round(image.height * scale);
+function chatToText(chat) {
+    return chat.title + "\n\n" + chat.messages.map(message => {
+        const speaker = message.rol === "user" ? "Tú" : "IA TODO";
+        return speaker + ":\n" + message.texto;
+    }).join("\n\n");
+}
 
-      canvas.getContext('2d').drawImage(
-        image, 0, 0, canvas.width, canvas.height
-      );
+async function shareChat(chat) {
+    const text = chatToText(chat);
 
-      const dataUrl = canvas.toDataURL('image/jpeg', .78);
-
-      sendMessage(
-        input.value.trim() || 'Describe esta imagen y dime qué observas.',
-        {
-          imageData: {
-            mime: 'image/jpeg',
-            data: dataUrl.split(',')[1]
-          },
-          previewImage: dataUrl,
-          visibleText: input.value.trim() || '📷 Analiza esta foto'
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: chat.title,
+                text: text
+            });
+            return;
+        } catch (error) {
+            if (error.name === "AbortError") return;
         }
-      );
-    };
+    }
 
-    image.onerror = () => {
-      addMessage('No pude abrir esa imagen. Prueba con JPG, PNG o WEBP.');
-    };
+    try {
+        await navigator.clipboard.writeText(text);
+        alert("Conversación copiada. Ya puedes pegarla en Facebook u otra aplicación.");
+    } catch (_) {
+        const area = document.createElement("textarea");
+        area.value = text;
+        document.body.appendChild(area);
+        area.select();
 
-    image.src = e.target.result;
-  };
+        const copied = document.execCommand("copy");
+        area.remove();
 
-  reader.readAsDataURL(file);
-  event.target.value = '';
+        alert(copied
+            ? "Conversación copiada."
+            : "No se pudo copiar automáticamente. Selecciona y copia el texto.");
+    }
+}
+
+function readFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+async function sendMessage() {
+    const input = $("messageInput");
+    let mensaje = input.value.trim();
+
+    if (attachedText) {
+        mensaje += (mensaje ? "\n\n" : "") +
+            "Contenido del archivo:\n" + attachedText;
+    }
+
+    if (!mensaje && !attachedImage) return;
+
+    ensureChat();
+
+    // Solo enviamos al servidor los mensajes anteriores a este turno.
+    const historial = currentChat().messages.slice();
+
+    addMessage("user", mensaje || "Analiza la imagen adjunta.");
+
+    input.value = "";
+    $("sendBtn").disabled = true;
+    $("statusText").textContent = "● Pensando…";
+
+    try {
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                mensaje: mensaje,
+                historial: historial,
+                imagen: attachedImage
+            })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok && !data.texto) {
+            throw new Error("Error del servidor");
+        }
+
+        const answer = data.texto || data.respuesta ||
+            "No recibí una respuesta.";
+
+        lastAnswer = answer;
+        addMessage("assistant", answer);
+
+        if (data.modo_creador === true) {
+            $("statusText").textContent = "★ Modo creador activo";
+        } else {
+            $("statusText").textContent = "● En línea";
+        }
+    } catch (_) {
+        addMessage(
+            "assistant",
+            "No pude conectarme con el servidor. Revisa los registros de Render."
+        );
+        $("statusText").textContent = "● Error de conexión";
+    } finally {
+        attachedImage = null;
+        attachedText = "";
+        $("attachmentNote").textContent = "";
+        $("sendBtn").disabled = false;
+    }
+}
+
+$("newChatBtn").addEventListener("click", createChat);
+$("sendBtn").addEventListener("click", sendMessage);
+
+$("messageInput").addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+    }
 });
 
-// Archivos de texto y código. PDF y DOCX no están habilitados aquí.
-$('#btnFile').addEventListener('click', () => $('#fileInput').click());
-
-$('#fileInput').addEventListener('change', event => {
-  const file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  const allowed = /\.(txt|md|csv|json|py|html|css|js|xml|yaml|yml|log)$/i;
-
-  if (!allowed.test(file.name)) {
-    addMessage(
-      'Este archivo no es compatible todavía. Usa TXT, MD, CSV, JSON, PY, HTML, CSS, JS, XML, YAML o LOG.'
-    );
-    event.target.value = '';
-    return;
-  }
-
-  const reader = new FileReader();
-
-  reader.onload = e => sendMessage(input.value.trim(), {
-    fileText: String(e.target.result || ''),
-    fileName: file.name,
-    visibleText: `📄 ${file.name} — ${input.value.trim() || 'Resume y explica este documento.'}`
-  });
-
-  reader.onerror = () => addMessage('No pude leer ese archivo.');
-
-  reader.readAsText(file);
-  event.target.value = '';
+$("creatorBtn").addEventListener("click", () => {
+    $("messageInput").value = "creador_joao_777";
+    sendMessage();
 });
 
-renderHistory();
+$("imageBtn").addEventListener("click", () => {
+    $("imageInput").click();
+});
 
-fetch('/health')
-  .then(r => {
-    if (!r.ok) throw new Error('offline');
-    return r.json();
-  })
-  .then(() => setStatus(true, 'Servidor conectado'))
-  .catch(() => setStatus(false, 'Servidor sin conexión'));
+$("fileBtn").addEventListener("click", () => {
+    $("fileInput").click();
+});
 
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
-  navigator.serviceWorker.register('/sw.js').catch(() => {});
+$("imageInput").addEventListener("change", async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+        const dataUrl = await readFile(file);
+
+        attachedImage = {
+            mime: file.type || "image/jpeg",
+            data: dataUrl.split(",")[1]
+        };
+
+        $("attachmentNote").textContent =
+            "Imagen adjunta: " + file.name;
+    } catch (_) {
+        alert("No pude leer la imagen.");
+    }
+
+    event.target.value = "";
+});
+
+$("fileInput").addEventListener("change", async event => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1000000) {
+        alert("Este ejemplo admite archivos de texto de hasta 1 MB.");
+        event.target.value = "";
+        return;
+    }
+
+    try {
+        attachedText = await file.text();
+        $("attachmentNote").textContent =
+            "Archivo adjunto: " + file.name;
+    } catch (_) {
+        alert("No pude leer el archivo.");
+    }
+
+    event.target.value = "";
+});
+
+$("speakBtn").addEventListener("click", () => {
+    if (!lastAnswer) {
+        alert("Primero debes recibir una respuesta.");
+        return;
+    }
+
+    if (!("speechSynthesis" in window)) {
+        alert("Tu navegador no admite lectura en voz alta.");
+        return;
+    }
+
+    speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(lastAnswer);
+    utterance.lang = "es-CO";
+    speechSynthesis.speak(utterance);
+});
+
+const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+$("micBtn").addEventListener("click", () => {
+    if (!SpeechRecognition) {
+        alert("El dictado por voz no está disponible en este navegador.");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "es-CO";
+    recognition.interimResults = false;
+
+    recognition.onresult = event => {
+        const text = event.results[0][0].transcript;
+        const input = $("messageInput");
+
+        input.value += (input.value ? " " : "") + text;
+        input.focus();
+    };
+
+    recognition.onerror = () => {
+        alert("No pude reconocer la voz. Comprueba el permiso del micrófono.");
+    };
+
+    recognition.start();
+});
+
+if (!currentChat() && chats.length > 0) {
+    activeChatId = chats[0].id;
+}
+
+if (!currentChat()) {
+    createChat();
+} else {
+    renderAll();
 }
