@@ -338,10 +338,30 @@ def preguntar(
             "No pude generar una respuesta."
         )
 
-    except Exception:
-        return (
-            "No pude obtener una respuesta de Groq. "
-            "Comprueba la clave GROQ_API_KEY, los límites "
-            "de uso y que el modelo configurado siga "
-            "disponible en tu cuenta."
+  
+except Exception as e:
+    codigo = getattr(e, "status_code", None)
+
+    if codigo == 401:
+        return "Error 401: la clave GROQ_API_KEY es inválida o no está configurada correctamente. Revisa las variables de entorno de Render."
+
+    elif codigo == 403:
+        return "Error 403: Groq rechazó la solicitud por permisos o restricciones de la cuenta."
+
+    elif codigo == 404:
+        return f"Error 404: el modelo '{modelo}' no está disponible. Revisa GROQ_TEXT_MODEL o GROQ_VISION_MODEL en Render."
+
+    elif codigo == 429:
+        return "Error 429: alcanzaste un límite de uso de Groq. Espera a que se restablezca el límite y revisa tu cuenta de Groq."
+
+    elif codigo == 400:
+        return "Error 400: Groq rechazó la solicitud. Puede haber un problema con el formato del mensaje, la imagen o los parámetros."
+
+    elif codigo and codigo >= 500:
+        return f"Error {codigo}: Groq tiene un problema temporal. Inténtalo de nuevo más tarde."
+
+    else:
+        print("Error interno de Groq:", repr(e))
+        return "No se pudo conectar con Groq. Revisa los registros de Render para identificar el error exacto."
+
         )
