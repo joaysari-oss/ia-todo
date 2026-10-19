@@ -1,121 +1,401 @@
+
+import json
+import logging
+import os
+import re
+from pathlib import Path
+
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    request,
+    send_from_directory,
+    Response,
+)
+from werkzeug.utils import secure_filename
+
+from ai.brain import preguntar
+
+
+# ==========================================
+# CONFIGURACIÓN DE IA TODO
+# ==========================================
+
+BASE_DIR = Path(__file__).resolve().parent
+INTERFACE_DIR = BASE_DIR / "interface"
+STATIC_DIR = BASE_DIR / "static"
+
+MAX_CONTENT_LENGTH = 8 * 1024 * 1024
+
+ALLOWED_EXTENSIONS = {
+    "txt", "md", "csv", "json", "py",
+    "html", "css", "js", "xml", "yaml",
+    "yml", "log"
+}
+
+app = Flask(
+    __name__,
+    template_folder=str(INTERFACE_DIR),
+    static_folder=str(STATIC_DIR),
+)
+
+app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO")
+)
+
+
+# ==========================================
+# LIMPIAR EL HISTORIAL DEL CHAT
+# ==========================================
+
+def normalize_history(raw):
+    if not isinstance(raw, list):
+        return []
+
+    cleaned = []
+
+    for item in raw[-14:]:
+        if not isinstance(item, dict):
+            continue
+
+        role = item.get("rol", item.get("role", "user"))
+        content = item.get("texto", item.get("content", ""))
+
+        if not isinstance(content, str):
+            continue
+
+        content = content.strip()[:8000]
+
+        if not content:
+            continue
+
+        if role in ("assistant", "bot"):
+            role = "assistant"
         else:
             role = "user"
-        if isinstance(content, str) and content.strip():
-            cleaned.append({"role": role, "content": content.strip()[:8000]})
+
+        cleaned.append({
+            "role": role,
+            "content": content,
+        })
+
     return cleaned
 
 
-@app.get("/")
+# ==========================================
+# PÁGINA PRINCIPAL
+# ==========================================
+
+@app.route("/", methods=["GET"])
 def home():
     return render_template("index.html")
 
 
-@app.get("/health")
+# ==========================================
+# COMPROBAR SI EL SERVIDOR ESTÁ FUNCIONANDO
+# ==========================================
+
+@app.route("/health", methods=["GET"])
 def health():
-    return jsonify({"ok": True, "servicio": "IA TODO"})
+    return jsonify({
+        "ok": True,
+        "servicio": "IA TODO",
+    }), 200
 
 
-@app.get("/manifest.json")
+# ==========================================
+# MANIFEST PARA LA APLICACIÓN WEB
+# ==========================================
+
+@app.route("/manifest.json", methods=["GET"])
 def manifest():
-    path = BASE_DIR / "interface" / "manifest.json"
-    if path.exists():
-        return send_from_directory(path.parent, path.name)
-    return jsonify({"name": "IA TODO", "short_name": "IA TODO", "start_url": "/", "display": "standalone", "background_color": "#0a0a12", "theme_color": "#7c5cff"})
+    manifest_path = INTERFACE_DIR / "manifest.json"
+
+    if manifest_path.is_file():
+        return send_from_directory(
+            str(INTERFACE_DIR),
+            "manifest.json",
+        )
+
+    return jsonify({
+        "name": "IA TODO",
+        "short_name": "IA TODO",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#0a0a12",
+        "theme_color": "#7c5cff",
+    })
 
 
-@app.get("/sw.js")
+# ==========================================
+# SERVICE WORKER
+# ==========================================
+
+@app.route("/sw.js", methods=["GET"])
 def service_worker():
-    path = BASE_DIR / "sw.js"
-    if path.exists():
-        return send_from_directory(path.parent, path.name, mimetype="application/javascript")
-    return "self.addEventListener('fetch', () => {});", 200, {"Content-Type": "application/javascript"}
+    sw_path = BASE_DIR / "sw.js"
 
+    if sw_path.is_file():
+        return send_from_directory(
+            str(BASE_DIR),
+            "sw.js",
+            mimetype="application/javascript",
+        )
+
+    return Response(
+        "self.addEventListener('fetch', () => {});",
+        mimetype="application/javascript",
+    )
+
+
+# ==========================================
+# PROCESAR MENSAJES CON LA INTELIGENCIA ARTIFICIAL
+# ==========================================
 
 def process_chat(message, history=None, image=None):
     message = str(message or "").strip()
+
     if not message and not image:
-        return jsonify({"error": "Escribe una pregunta o adjunta una imagen."}), 400
+        return jsonify({
+            "error": "Escribe una pregunta o adjunta una imagen."
+        }), 400
+
     try:
-        result = preguntar(message, historial=normalize_history(history), imagen=image)
+        result = preguntar(
+            message,
+            historial=normalize_history(history),
+            imagen=image,
+        )
+
         if isinstance(result, dict):
-            answer = str(result.get("respuesta", "") or "").strip()
-            creator_mode = bool(result.get("modo_creador", False))
+            answer = str(
+                result.get("respuesta", "") or ""
+            ).strip()
+
+            creator_mode = bool(
+                result.get("modo_creador", False)
+            )
         else:
             answer = str(result or "").strip()
             creator_mode = False
+
         if not answer:
-            return jsonify({"error": "La IA no devolvió una respuesta."}), 502
-        return jsonify({"texto": answer, "respuesta": answer, "modo_creador": creator_mode}), 200
+            return jsonify({
+                "error": "La IA no devolvió una respuesta."
+            }), 502
+
+        return jsonify({
+            "texto": answer,
+            "respuesta": answer,
+            "modo_creador": creator_mode,
+        }), 200
+
     except Exception:
-        app.logger.exception("Error procesando /api/chat")
-        return jsonify({"error": "No se pudo procesar la solicitud. Revisa la configuración de GROQ_API_KEY y los registros del servidor."}), 502
+        app.logger.exception(
+            "Error procesando una solicitud del chat"
+        )
+
+        return jsonify({
+            "error": (
+                "No se pudo procesar tu pregunta. "
+                "Comprueba la configuración de la IA "
+                "y los registros del servidor."
+            )
+        }), 502
 
 
-@app.post("/api/chat")
+# ==========================================
+# RUTA PRINCIPAL DEL CHAT
+# IMPORTANTE: ESTA RUTA SOLUCIONA EL 404 DE /api/chat
+# ==========================================
+
+@app.route("/api/chat", methods=["POST"])
 def api_chat():
-    data = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True)
+
+    if not isinstance(data, dict):
+        return jsonify({
+            "error": "La solicitud debe contener datos JSON válidos."
+        }), 400
+
+    message = data.get("mensaje", "")
     history = data.get("historial", [])
     image = data.get("imagen")
-    message = data.get("mensaje", "")
-    # The current UI sends the current user message as the last history item.
-    if not message and isinstance(history, list) and history:
-        last = history[-1]
-        if isinstance(last, dict) and last.get("rol", last.get("role")) in ("user", "human"):
-            message = last.get("texto", last.get("content", ""))
-            history = history[:-1]
-    return process_chat(message, history, image)
+
+    if not isinstance(message, str):
+        message = ""
+
+    if not isinstance(history, list):
+        history = []
+
+    return process_chat(
+        message=message,
+        history=history,
+        image=image,
+    )
 
 
-@app.post("/chat")
+# ==========================================
+# RUTA ANTIGUA PARA COMPATIBILIDAD
+# ==========================================
+
+@app.route("/chat", methods=["POST"])
 def chat_legacy():
-    """Compatibility route for the older FormData-based frontend."""
-    message = request.form.get("mensaje", "")
+    message = request.form.get("mensaje", "").strip()
+    history_text = request.form.get("historial", "[]")
+
     try:
-        history = json.loads(request.form.get("historial", "[]"))
+        history = json.loads(history_text)
     except (json.JSONDecodeError, TypeError):
         history = []
+
     uploaded = request.files.get("archivo")
+
     if uploaded and uploaded.filename:
         filename = secure_filename(uploaded.filename)
-        extension = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+
+        if not filename or "." not in filename:
+            return jsonify({
+                "error": "El nombre del archivo no es válido."
+            }), 415
+
+        extension = filename.rsplit(".", 1)[-1].lower()
+
         if extension not in ALLOWED_EXTENSIONS:
-            return jsonify({"error": "Formato no permitido. Usa un documento de texto como TXT, MD, CSV, JSON, PY, HTML, CSS o JS."}), 415
-        path = UPLOAD_DIR / filename
-        uploaded.save(path)
+            return jsonify({
+                "error": (
+                    "Formato no permitido. Usa TXT, MD, CSV, "
+                    "JSON, PY, HTML, CSS, JS, XML, YAML o LOG."
+                )
+            }), 415
+
         try:
-            content = path.read_text(encoding="utf-8", errors="replace")[:12000]
-            message = f"Contenido del archivo {filename}:\n\n{content}\n\nPregunta del usuario: {message or 'Resume y explica el documento.'}"
-        finally:
-            try:
-                path.unlink(missing_ok=True)
-            except OSError:
-                pass
-    response, status = process_chat(message, history)
+            content_bytes = uploaded.read(MAX_CONTENT_LENGTH + 1)
+
+            if len(content_bytes) > MAX_CONTENT_LENGTH:
+                return jsonify({
+                    "error": "El archivo supera el límite de 8 MB."
+                }), 413
+
+            content = content_bytes.decode(
+                "utf-8",
+                errors="replace",
+            )[:12000]
+
+            message = (
+                f"Contenido del archivo {filename}:\n\n"
+                f"{content}\n\n"
+                f"Pregunta del usuario: "
+                f"{message or 'Resume y explica el documento.'}"
+            )
+
+        except Exception:
+            app.logger.exception(
+                "Error leyendo el archivo adjunto"
+            )
+
+            return jsonify({
+                "error": "No se pudo leer el archivo adjunto."
+            }), 400
+
+    response, status = process_chat(
+        message=message,
+        history=history,
+    )
+
     if status != 200:
         return response, status
-    data = response.get_json()
-    return jsonify({"respuesta": data.get("texto", ""), "modo_creador": data.get("modo_creador", False)})
+
+    result = response.get_json() or {}
+
+    return jsonify({
+        "respuesta": result.get("texto", ""),
+        "modo_creador": result.get("modo_creador", False),
+    }), 200
 
 
-@app.post("/generar_titulo")
+# ==========================================
+# GENERAR TÍTULO PARA UNA CONVERSACIÓN
+# ==========================================
+
+@app.route("/generar_titulo", methods=["POST"])
 def generar_titulo():
     data = request.get_json(silent=True) or {}
-    message = str(data.get("mensaje", "")).strip()[:500]
-    if not message:
-        return jsonify({"titulo": "Nuevo chat"})
-    try:
-        result = preguntar("Crea un título descriptivo de máximo 5 palabras para esta conversación. Devuelve solo el título, sin comillas. Tema: " + message)
-        title = result.get("respuesta", "Nuevo chat") if isinstance(result, dict) else str(result or "Nuevo chat")
-        title = re.sub(r"[\r\n\"'`]+", "", title).strip()[:70] or "Nuevo chat"
-        return jsonify({"titulo": title})
-    except Exception:
-        return jsonify({"titulo": " ".join(message.split()[:5])[:70] or "Nuevo chat"})
 
+    message = str(
+        data.get("mensaje", "")
+    ).strip()[:500]
+
+    if not message:
+        return jsonify({
+            "titulo": "Nuevo chat"
+        }), 200
+
+    try:
+        result = preguntar(
+            "Crea un título descriptivo de máximo 5 palabras "
+            "para esta conversación. Devuelve solo el título, "
+            "sin comillas. Tema: " + message
+        )
+
+        if isinstance(result, dict):
+            title = str(
+                result.get("respuesta", "Nuevo chat")
+            )
+        else:
+            title = str(result or "Nuevo chat")
+
+        title = re.sub(
+            r"[\r\n\"'`]+",
+            "",
+            title,
+        ).strip()[:70]
+
+        return jsonify({
+            "titulo": title or "Nuevo chat"
+        }), 200
+
+    except Exception:
+        app.logger.exception(
+            "No se pudo generar el título"
+        )
+
+        fallback = " ".join(message.split()[:5])[:70]
+
+        return jsonify({
+            "titulo": fallback or "Nuevo chat"
+        }), 200
+
+
+# ==========================================
+# ERRORES DEL SERVIDOR
+# ==========================================
 
 @app.errorhandler(413)
-def too_large(_error):
-    return jsonify({"error": "El archivo o la solicitud supera el límite de 8 MB."}), 413
+def file_too_large(_error):
+    return jsonify({
+        "error": "El archivo o la solicitud supera el límite de 8 MB."
+    }), 413
 
+
+@app.errorhandler(404)
+def not_found(_error):
+    return jsonify({
+        "error": "La ruta solicitada no existe."
+    }), 404
+
+
+# ==========================================
+# EJECUCIÓN LOCAL
+# RENDER UTILIZA GUNICORN
+# ==========================================
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=os.getenv("FLASK_DEBUG") == "1")
+    app.run(
+        host="0.0.0.0",
+        port=int(os.getenv("PORT", "5000")),
+        debug=os.getenv("FLASK_DEBUG") == "1",
+    )
