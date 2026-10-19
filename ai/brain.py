@@ -12,15 +12,8 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
-TEXT_MODEL = os.getenv(
-    "GROQ_TEXT_MODEL",
-    "llama-3.3-70b-versatile"
-)
-
-VISION_MODEL = os.getenv(
-    "GROQ_VISION_MODEL",
-    "meta-llama/llama-4-scout-17b-16e-instruct"
-)
+TEXT_MODEL = os.getenv("GROQ_TEXT_MODEL", "openai/gpt-oss-20b")
+VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "meta-llama/llama-4-scout-17b-16e-instruct")
 
 
 # ==================================================
