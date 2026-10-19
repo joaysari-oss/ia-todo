@@ -2,361 +2,331 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#101522">
-    <title>IA TODO</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111318">
+  <title>IA TODO</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    :root {
+      color-scheme: dark;
+      --fondo: #111318;
+      --panel: #191c23;
+      --borde: #30343d;
+      --texto: #f5f6fa;
+      --secundario: #a4a9b5;
+      --acento: #7657f6;
+    }
 
-    <style>
-        :root {
-            --fondo: #101522;
-            --panel: #171e2d;
-            --panel2: #222c40;
-            --texto: #f5f7fb;
-            --suave: #aab5c7;
-            --borde: #303c51;
-            --morado: #7657ed;
-        }
+    * { box-sizing: border-box; }
 
-        * {
-            box-sizing: border-box;
-        }
+    body {
+      margin: 0;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      background: var(--fondo);
+      color: var(--texto);
+      font-family: Arial, sans-serif;
+    }
 
-        body {
-            margin: 0;
-            background: var(--fondo);
-            color: var(--texto);
-            font-family: Arial, sans-serif;
-        }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
 
-        button, textarea {
-            font: inherit;
-        }
+    .sidebar {
+      width: 255px;
+      flex-shrink: 0;
+      background: #171920;
+      border-right: 1px solid var(--borde);
+      padding: 18px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-        button {
-            cursor: pointer;
-        }
+    .logo {
+      padding: 8px 10px 18px;
+      font-size: 23px;
+      font-weight: 800;
+      letter-spacing: .4px;
+    }
 
-        .app {
-            display: flex;
-            height: 100dvh;
-        }
+    .logo span { color: #9a85ff; }
 
-        .sidebar {
-            width: 280px;
-            flex-shrink: 0;
-            background: #0c1220;
-            border-right: 1px solid var(--borde);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            padding: 15px;
-        }
+    .nuevo, .sidebar button, .icon-btn {
+      color: var(--texto);
+      background: transparent;
+      border: 1px solid var(--borde);
+      border-radius: 11px;
+      padding: 11px;
+      text-align: left;
+    }
 
-        .logo {
-            font-size: 23px;
-            font-weight: bold;
-            padding: 8px 4px;
-        }
+    .nuevo {
+      background: var(--acento);
+      border-color: var(--acento);
+      text-align: center;
+      font-weight: 700;
+    }
 
-        .nuevo {
-            background: var(--morado);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            padding: 13px;
-            text-align: left;
-        }
+    .historial-titulo {
+      color: var(--secundario);
+      font-size: 12px;
+      margin: 17px 8px 5px;
+    }
 
-        .etiqueta {
-            font-size: 12px;
-            color: var(--suave);
-            margin-top: 8px;
-        }
+    #listaChats {
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
 
-        #chatList {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
+    .chat-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
 
-        .chat-row {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            padding: 4px;
-            border-radius: 9px;
-        }
+    .chat-item .abrir-chat {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      border-color: transparent;
+    }
 
-        .chat-row.active {
-            background: var(--panel2);
-        }
+    .chat-item.activo .abrir-chat {
+      background: #292d38;
+    }
 
-        .chat-open {
-            flex: 1;
-            min-width: 0;
-            background: transparent;
-            color: var(--texto);
-            border: none;
-            text-align: left;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 9px 5px;
-        }
+    .eliminar {
+      border: 0 !important;
+      color: #ff8b8b !important;
+      padding: 9px !important;
+    }
 
-        .icon-btn {
-            border: none;
-            background: transparent;
-            color: var(--texto);
-            border-radius: 7px;
-            min-width: 32px;
-            height: 32px;
-        }
+    .pie-sidebar {
+      margin-top: auto;
+      padding: 10px;
+      color: var(--secundario);
+      font-size: 12px;
+    }
 
-        .icon-btn:hover {
-            background: #344159;
-        }
+    .principal {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
 
-        .creator {
-            background: #1a2334;
-            color: #ffd65a;
-            border: 1px solid var(--borde);
-            border-radius: 10px;
-            padding: 12px;
-            text-align: left;
-        }
+    header {
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--borde);
+    }
 
-        .main {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-        }
+    .estado {
+      font-size: 12px;
+      color: #9de4b3;
+    }
 
-        .topbar {
-            padding: 17px 20px;
-            border-bottom: 1px solid var(--borde);
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-        }
+    #mensajes {
+      flex: 1;
+      overflow-y: auto;
+      width: 100%;
+      max-width: 850px;
+      margin: 0 auto;
+      padding: 26px 20px;
+    }
 
-        #statusText {
-            color: #83e6b2;
-            font-size: 13px;
-        }
+    .bienvenida {
+      text-align: center;
+      margin: 12vh auto 30px;
+    }
 
-        #messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 22px max(16px, calc((100% - 800px) / 2));
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
+    .bienvenida h1 { font-size: 32px; }
+    .bienvenida p { color: var(--secundario); }
 
-        .welcome {
-            margin: auto;
-            text-align: center;
-            color: var(--suave);
-            max-width: 600px;
-        }
+    .mensaje {
+      display: flex;
+      margin: 18px 0;
+      gap: 12px;
+      line-height: 1.65;
+    }
 
-        .welcome h1 {
-            color: var(--texto);
-            font-size: 35px;
-        }
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #292d38;
+      flex-shrink: 0;
+    }
 
-        .bubble {
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-            line-height: 1.6;
-            padding: 14px 16px;
-            border-radius: 15px;
-        }
+    .contenido {
+      min-width: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
 
-        .bubble.user {
-            align-self: flex-end;
-            max-width: 85%;
-            background: #303b52;
-        }
+    .mensaje.usuario .avatar {
+      background: var(--acento);
+    }
 
-        .bubble.assistant {
-            background: var(--panel);
-            border: 1px solid var(--borde);
-        }
+    .contenido img {
+      max-width: min(100%, 360px);
+      max-height: 320px;
+      border-radius: 12px;
+      display: block;
+      margin-top: 8px;
+    }
 
-        .composer-wrap {
-            padding: 12px 18px 18px;
-            border-top: 1px solid var(--borde);
-        }
+    .zona-escritura {
+      width: 100%;
+      padding: 12px 18px 18px;
+      border-top: 1px solid var(--borde);
+    }
 
-        .composer {
-            max-width: 850px;
-            margin: auto;
-            background: var(--panel);
-            border: 1px solid var(--borde);
-            border-radius: 16px;
-            padding: 10px;
-        }
+    .compositor {
+      max-width: 850px;
+      margin: 0 auto;
+      border: 1px solid #414550;
+      border-radius: 17px;
+      background: var(--panel);
+      padding: 12px;
+    }
 
-        #messageInput {
-            width: 100%;
-            min-height: 65px;
-            max-height: 180px;
-            resize: vertical;
-            background: transparent;
-            color: var(--texto);
-            border: none;
-            outline: none;
-            padding: 8px;
-        }
+    #mensaje {
+      width: 100%;
+      min-height: 48px;
+      max-height: 180px;
+      resize: vertical;
+      color: var(--texto);
+      background: transparent;
+      border: 0;
+      outline: none;
+      padding: 8px;
+    }
 
-        .tools {
-            display: flex;
-            gap: 7px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+    .acciones {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
-        .tool-btn {
-            background: #273249;
-            color: white;
-            border: 1px solid var(--borde);
-            border-radius: 9px;
-            padding: 9px;
-        }
+    .acciones button {
+      border: 1px solid var(--borde);
+      border-radius: 9px;
+      background: #242832;
+      color: var(--texto);
+      padding: 9px 11px;
+    }
 
-        #sendBtn {
-            margin-left: auto;
-            background: var(--morado);
-            color: white;
-            border: none;
-            border-radius: 9px;
-            padding: 10px 16px;
-        }
+    .acciones .enviar {
+      margin-left: auto;
+      background: var(--acento);
+      border-color: var(--acento);
+      font-weight: 700;
+    }
 
-        #attachmentNote {
-            color: var(--suave);
-            font-size: 12px;
-            padding: 4px;
-        }
+    #archivoNombre {
+      color: var(--secundario);
+      font-size: 12px;
+      padding: 5px;
+    }
 
-        input[type="file"] {
-            display: none;
-        }
+    .nota {
+      text-align: center;
+      color: var(--secundario);
+      font-size: 11px;
+      margin: 10px 0 0;
+    }
 
-        @media (max-width: 650px) {
-            .sidebar {
-                width: 75px;
-                padding: 7px;
-            }
+    #menuBtn { display: none; }
 
-            .logo {
-                font-size: 15px;
-                text-align: center;
-            }
+    @media (max-width: 700px) {
+      .sidebar {
+        position: fixed;
+        z-index: 5;
+        inset: 0 auto 0 0;
+        transform: translateX(-100%);
+        transition: transform .2s;
+        box-shadow: none;
+      }
 
-            .nuevo {
-                text-align: center;
-                font-size: 0;
-                padding: 12px 3px;
-            }
+      .sidebar.abierta {
+        transform: translateX(0);
+        box-shadow: 0 0 0 100vmax #0009;
+      }
 
-            .nuevo::before {
-                content: "+";
-                font-size: 23px;
-            }
-
-            .etiqueta, .chat-open, .creator-text {
-                display: none;
-            }
-
-            .chat-row {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .creator {
-                text-align: center;
-                padding: 10px 3px;
-            }
-
-            .topbar {
-                padding: 12px;
-                flex-wrap: wrap;
-            }
-
-            #messages {
-                padding: 14px 10px;
-            }
-
-            .composer-wrap {
-                padding: 8px;
-            }
-        }
-    </style>
+      #menuBtn { display: inline-block; }
+      header { padding: 10px 12px; }
+      #mensajes { padding: 18px 13px; }
+      .zona-escritura { padding: 10px; }
+      .bienvenida h1 { font-size: 25px; }
+    }
+  </style>
 </head>
 
 <body>
-<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">IA <span>TODO</span></div>
 
-    <aside class="sidebar">
-        <div class="logo">✨ IA TODO</div>
+    <button class="nuevo" id="nuevoChat">＋ Nueva conversación</button>
 
-        <button class="nuevo" id="newChatBtn">
-            + Nueva conversación
-        </button>
+    <div class="historial-titulo">TUS CONVERSACIONES</div>
+    <div id="listaChats"></div>
 
-        <div class="etiqueta">HISTORIAL</div>
-        <div id="chatList"></div>
+    <div class="pie-sidebar">IA TODO · Asistente inteligente</div>
+  </aside>
 
-        <button class="creator" id="creatorBtn">
-            ★ <span class="creator-text">Modo creador</span>
-        </button>
-    </aside>
+  <main class="principal">
+    <header>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="icon-btn" id="menuBtn" aria-label="Abrir menú">☰</button>
+        <strong>IA TODO</strong>
+      </div>
+      <span class="estado" id="estado">● Lista para ayudarte</span>
+    </header>
 
-    <main class="main">
-        <header class="topbar">
-            <strong id="currentTitle">Nueva conversación</strong>
-            <span id="statusText">● En línea</span>
-        </header>
+    <section id="mensajes" aria-live="polite">
+      <div class="bienvenida" id="bienvenida">
+        <h1>¿En qué te puedo ayudar?</h1>
+        <p>Pregunta, escribe, adjunta una imagen o dicta tu mensaje.</p>
+      </div>
+    </section>
 
-        <section id="messages" aria-live="polite">
-            <div class="welcome">
-                <h1>¿En qué te ayudo hoy?</h1>
-                <p>Pregunta lo que quieras a IA TODO.</p>
-            </div>
-        </section>
+    <section class="zona-escritura">
+      <div class="compositor">
+        <textarea id="mensaje" placeholder="Escribe tu mensaje..." rows="2"></textarea>
 
-        <div class="composer-wrap">
-            <div class="composer">
-                <textarea
-                    id="messageInput"
-                    placeholder="Escribe tu mensaje..."
-                    rows="2"
-                ></textarea>
+        <div id="archivoNombre"></div>
 
-                <div id="attachmentNote"></div>
-
-                <div class="tools">
-                    <button class="tool-btn" id="imageBtn">📷 Foto</button>
-                    <button class="tool-btn" id="fileBtn">📎 Archivo</button>
-                    <button class="tool-btn" id="micBtn">🎙️ Dictar</button>
-                    <button class="tool-btn" id="speakBtn">🔊 Leer</button>
-                    <button id="sendBtn">Enviar ↑</button>
-                </div>
-
-                <input id="imageInput" type="file" accept="image/*">
-                <input id="fileInput" type="file" accept=".txt,.md,.csv,.json,.xml,.html,.py,.js,.css">
-            </div>
+        <div class="acciones">
+          <button id="fotoBtn" type="button">🖼️ Foto</button>
+          <button id="archivoBtn" type="button">📎 Archivo</button>
+          <button id="dictarBtn" type="button">🎙️ Dictar</button>
+          <button id="leerBtn" type="button">🔊 Leer</button>
+          <button id="compartirBtn" type="button">↗ Compartir</button>
+          <button id="borrarAdjuntoBtn" type="button">✕ Quitar archivo</button>
+          <button class="enviar" id="enviarBtn" type="button">Enviar ↑</button>
         </div>
-    </main>
-</div>
 
-<script src="/static/script.js"></script>
+        <input id="imagenInput" type="file" accept="image/*" hidden>
+        <input id="archivoInput" type="file" accept=".txt,.md,.csv,.json,.py,.html,.css,.js" hidden>
+      </div>
+      <p class="nota">Comprueba la información importante. Las respuestas pueden contener errores.</p>
+    </section>
+  </main>
+
+  <script src="/static/script.js"></script>
 </body>
 </html>
