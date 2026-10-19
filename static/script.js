@@ -1,466 +1,1007 @@
 
+"use strict";
+
+/* =========================================================
+   IA TODO — CONFIGURACIÓN
+   Puedes cambiar el código de creador aquí.
+   ========================================================= */
+
+const CODIGO_CREADOR = "creador_joao_777";
+const NOMBRE_CREADOR = "João";
+const CLAVE_HISTORIAL = "iatodo_chats_v2";
+const MAX_IMAGEN_MB = 5;
+const MAX_ARCHIVO_MB = 1;
+
+/* =========================================================
+   ELEMENTOS DE LA INTERFAZ
+   ========================================================= */
+
 const $ = (id) => document.getElementById(id);
 
-const mensajesEl = $("mensajes");
-const bienvenidaEl = $("bienvenida");
-const entrada = $("mensaje");
-const enviarBtn = $("enviarBtn");
-const estadoEl = $("estado");
-const listaChats = $("listaChats");
-const imagenInput = $("imagenInput");
-const archivoInput = $("archivoInput");
-const archivoNombre = $("archivoNombre");
+const elementos = {
+    sidebar: $("sidebar"),
+    nuevoChat: $("nuevoChat"),
+    listaChats: $("listaChats"),
+    menuBtn: $("menuBtn"),
+    estado: $("estado"),
+    mensajes: $("mensajes"),
+    mensaje: $("mensaje"),
+    archivoNombre: $("archivoNombre"),
+    fotoBtn: $("fotoBtn"),
+    archivoBtn: $("archivoBtn"),
+    dictarBtn: $("dictarBtn"),
+    leerBtn: $("leerBtn"),
+    compartirBtn: $("compartirBtn"),
+    borrarAdjuntoBtn: $("borrarAdjuntoBtn"),
+    enviarBtn: $("enviarBtn"),
+    imagenInput: $("imagenInput"),
+    archivoInput: $("archivoInput")
+};
 
 let chats = [];
 let chatActualId = null;
 let imagenAdjunta = null;
-let textoArchivo = "";
-let ocupado = false;
-let reconocimiento = null;
+let textoArchivoAdjunto = "";
+let nombreArchivoAdjunto = "";
+let enviando = false;
+let ultimoTextoAsistente = "";
+let reconocimientoVoz = null;
 
-try {
-  chats = JSON.parse(localStorage.getItem("iatodo_chats_v2") || "[]");
-  if (!Array.isArray(chats)) chats = [];
-} catch {
-  chats = [];
+/* =========================================================
+   UTILIDADES
+   ========================================================= */
+
+function crearId() {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+    }
+
+    return Date.now().toString(36) +
+        Math.random().toString(36).slice(2);
 }
 
-function guardar() {
-  try {
-    localStorage.setItem("iatodo_chats_v2", JSON.stringify(chats));
-  } catch (error) {
-    console.error("No se pudo guardar el historial:", error);
-  }
+function obtenerChatActual() {
+    return chats.find(chat => chat.id === chatActualId) || null;
 }
 
-function crearChat() {
-  const chat = {
-    id: String(Date.now()) + Math.random().toString(36).slice(2, 7),
-    titulo: "Nueva conversación",
-    mensajes: []
-  };
-
-  chats.unshift(chat);
-  chatActualId = chat.id;
-  guardar();
-  renderizarTodo();
-  entrada.focus();
+function guardarChats() {
+    try {
+        localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(chats));
+    } catch (error) {
+        console.error("No se pudo guardar el historial:", error);
+        mostrarEstado("No se pudo guardar el historial en este navegador.");
+    }
 }
 
-function chatActual() {
-  return chats.find((chat) => chat.id === chatActualId);
+function cargarChats() {
+    try {
+        const guardado = localStorage.getItem(CLAVE_HISTORIAL);
+        const datos = guardado ? JSON.parse(guardado) : [];
+
+        if (!Array.isArray(datos)) {
+            chats = [];
+            return;
+        }
+
+        chats = datos
+            .filter(chat => chat && typeof chat === "object")
+            .map(chat => ({
+                id: String(chat.id || crearId()),
+                titulo: String(chat.titulo || "Nueva conversación"),
+                mensajes: Array.isArray(chat.mensajes)
+                    ? chat.mensajes.filter(m =>
+                        m &&
+                        (m.rol === "user" || m.rol === "assistant") &&
+                        typeof m.texto === "string"
+                    )
+                    : [],
+                fecha: Number(chat.fecha) || Date.now(),
+                actualizado: Number(chat.actualizado) || Date.now()
+            }));
+    } catch (error) {
+        console.error("Error leyendo el historial:", error);
+        chats = [];
+    }
 }
 
-function asegurarChat() {
-  if (!chatActual()) crearChat();
-  return chatActual();
+function mostrarEstado(texto) {
+    if (elementos.estado) {
+        elementos.estado.textContent = texto;
+    }
 }
 
-function textoPlano(texto) {
-  return String(texto ?? "");
+function escaparHTML(texto) {
+    return String(texto)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
-function agregarMensaje(rol, texto, imagen = null) {
-  const chat = asegurarChat();
+function limitarTitulo(texto) {
+    const limpio = String(texto || "")
+        .replace(/\s+/g, " ")
+        .trim();
 
-  chat.mensajes.push({
-    rol,
-    texto: textoPlano(texto),
-    imagen: imagen || null
-  });
+    if (!limpio) return "Nueva conversación";
 
-  if (
-    chat.titulo === "Nueva conversación" &&
-    rol === "user" &&
-    texto.trim()
-  ) {
-    chat.titulo = texto.trim().slice(0, 42);
-    if (texto.trim().length > 42) chat.titulo += "...";
-  }
-
-  guardar();
-  renderizarMensajes();
-  renderizarLista();
+    return limpio.length > 42
+        ? limpio.slice(0, 42) + "…"
+        : limpio;
 }
 
-function renderizarMensajes() {
-  mensajesEl.replaceChildren();
-  const chat = chatActual();
+function desplazarAbajo() {
+    if (elementos.mensajes) {
+        elementos.mensajes.scrollTop = elementos.mensajes.scrollHeight;
+    }
+}
 
-  if (!chat || chat.mensajes.length === 0) {
-    const bienvenida = document.createElement("div");
-    bienvenida.className = "bienvenida";
+/* =========================================================
+   PANTALLA DE BIENVENIDA
+   Aparece al iniciar y cada vez que se crea un chat nuevo.
+   ========================================================= */
 
-    const titulo = document.createElement("h1");
-    titulo.textContent = "¿En qué te puedo ayudar?";
+function mostrarBienvenida() {
+    if (!elementos.mensajes) return;
 
-    const descripcion = document.createElement("p");
-    descripcion.textContent =
-      "Pregunta, escribe, adjunta una imagen o dicta tu mensaje.";
+    elementos.mensajes.innerHTML = `
+        <section class="bienvenida-ia">
+            <div class="icono-bienvenida" aria-hidden="true">✦</div>
 
-    bienvenida.append(titulo, descripcion);
-    mensajesEl.appendChild(bienvenida);
-    return;
-  }
+            <h1>Hola, bienvenido a IA TODO</h1>
 
-  for (const item of chat.mensajes) {
-    const fila = document.createElement("div");
-    fila.className = "mensaje " +
-      (item.rol === "user" ? "usuario" : "asistente");
+            <p class="texto-bienvenida">
+                Tu espacio para aprender, crear, investigar y resolver
+                tus dudas. ¿Qué vamos a descubrir hoy?
+            </p>
 
-    const avatar = document.createElement("div");
-    avatar.className = "avatar";
-    avatar.textContent = item.rol === "user" ? "Tú" : "IA";
+            <div class="tarjetas-bienvenida">
+                <button type="button" class="tarjeta-bienvenida"
+                    data-sugerencia="Explícame un tema paso a paso.">
+                    <span class="emoji-tarjeta">📚</span>
+                    <strong>Aprende algo nuevo</strong>
+                    <span>Entiende cualquier tema paso a paso.</span>
+                </button>
+
+                <button type="button" class="tarjeta-bienvenida"
+                    data-sugerencia="Dame ideas originales para mis proyectos.">
+                    <span class="emoji-tarjeta">💡</span>
+                    <strong>Inspírate y crea</strong>
+                    <span>Encuentra ideas para tus proyectos.</span>
+                </button>
+
+                <button type="button" class="tarjeta-bienvenida"
+                    data-sugerencia="Ayúdame a investigar un tema y encontrar información actual.">
+                    <span class="emoji-tarjeta">🌐</span>
+                    <strong>Explora información</strong>
+                    <span>Investiga temas y actualidad.</span>
+                </button>
+
+                <button type="button" class="tarjeta-bienvenida"
+                    data-sugerencia="Ayúdame a programar, diseñar o construir un proyecto.">
+                    <span class="emoji-tarjeta">🚀</span>
+                    <strong>Construye algo increíble</strong>
+                    <span>Programa, diseña y experimenta.</span>
+                </button>
+            </div>
+        </section>
+    `;
+
+    elementos.mensajes.querySelectorAll("[data-sugerencia]")
+        .forEach(tarjeta => {
+            tarjeta.addEventListener("click", () => {
+                if (!elementos.mensaje) return;
+
+                elementos.mensaje.value =
+                    tarjeta.getAttribute("data-sugerencia") || "";
+
+                elementos.mensaje.focus();
+                ajustarAlturaTexto();
+            });
+        });
+}
+
+/* =========================================================
+   MOSTRAR MENSAJES DE UNA CONVERSACIÓN
+   ========================================================= */
+
+function agregarMensajeVisual(rol, texto) {
+    const contenedor = document.createElement("div");
+    contenedor.className = "mensaje-chat " +
+        (rol === "user" ? "mensaje-usuario" : "mensaje-asistente");
+
+    const etiqueta = document.createElement("div");
+    etiqueta.className = "etiqueta-mensaje";
+    etiqueta.textContent = rol === "user" ? "Tú" : "IA TODO";
 
     const contenido = document.createElement("div");
-    contenido.className = "contenido";
-    contenido.textContent = item.texto || "";
+    contenido.className = "contenido-mensaje";
+    contenido.textContent = String(texto || "");
 
-    if (item.imagen) {
-      const imagen = document.createElement("img");
-      imagen.src = item.imagen;
-      imagen.alt = "Imagen adjunta";
-      contenido.appendChild(imagen);
+    contenedor.appendChild(etiqueta);
+    contenedor.appendChild(contenido);
+    elementos.mensajes.appendChild(contenedor);
+}
+
+function mostrarMensajesChat(chat) {
+    if (!elementos.mensajes) return;
+
+    if (!chat || !Array.isArray(chat.mensajes) ||
+        chat.mensajes.length === 0) {
+        mostrarBienvenida();
+        return;
     }
 
-    fila.append(avatar, contenido);
-    mensajesEl.appendChild(fila);
-  }
+    elementos.mensajes.innerHTML = "";
 
-  mensajesEl.scrollTop = mensajesEl.scrollHeight;
-}
+    chat.mensajes.forEach(mensaje => {
+        agregarMensajeVisual(mensaje.rol, mensaje.texto);
 
-function renderizarLista() {
-  listaChats.replaceChildren();
-
-  for (const chat of chats) {
-    const fila = document.createElement("div");
-    fila.className = "chat-item" +
-      (chat.id === chatActualId ? " activo" : "");
-
-    const abrir = document.createElement("button");
-    abrir.className = "abrir-chat";
-    abrir.textContent = chat.titulo || "Nueva conversación";
-    abrir.title = abrir.textContent;
-    abrir.addEventListener("click", () => {
-      chatActualId = chat.id;
-      guardar();
-      renderizarTodo();
-      $("sidebar").classList.remove("abierta");
+        if (mensaje.rol === "assistant") {
+            ultimoTextoAsistente = mensaje.texto;
+        }
     });
 
-    const eliminar = document.createElement("button");
-    eliminar.className = "eliminar";
-    eliminar.textContent = "🗑";
-    eliminar.title = "Eliminar esta conversación";
-    eliminar.setAttribute("aria-label", "Eliminar conversación");
+    desplazarAbajo();
+}
 
-    eliminar.addEventListener("click", () => {
-      if (!confirm("¿Quieres eliminar esta conversación?")) return;
+function actualizarInterfazHistorial() {
+    if (!elementos.listaChats) return;
 
-      chats = chats.filter((c) => c.id !== chat.id);
+    elementos.listaChats.innerHTML = "";
 
-      if (chatActualId === chat.id) {
-        chatActualId = chats.length ? chats[0].id : null;
-      }
+    const ordenados = [...chats].sort(
+        (a, b) => (b.actualizado || b.fecha) - (a.actualizado || a.fecha)
+    );
 
-      guardar();
-      renderizarTodo();
+    if (ordenados.length === 0) {
+        const vacio = document.createElement("div");
+        vacio.className = "historial-vacio";
+        vacio.textContent = "Tus conversaciones aparecerán aquí.";
+        elementos.listaChats.appendChild(vacio);
+        return;
+    }
+
+    ordenados.forEach(chat => {
+        const fila = document.createElement("div");
+        fila.className = "fila-chat";
+
+        if (chat.id === chatActualId) {
+            fila.classList.add("chat-seleccionado");
+        }
+
+        const abrir = document.createElement("button");
+        abrir.type = "button";
+        abrir.className = "abrir-chat";
+        abrir.textContent = chat.titulo;
+        abrir.title = chat.titulo;
+        abrir.addEventListener("click", () => abrirChat(chat.id));
+
+        const borrar = document.createElement("button");
+        borrar.type = "button";
+        borrar.className = "borrar-chat";
+        borrar.textContent = "×";
+        borrar.title = "Eliminar esta conversación";
+        borrar.setAttribute("aria-label", "Eliminar " + chat.titulo);
+
+        borrar.addEventListener("click", event => {
+            event.stopPropagation();
+            eliminarChat(chat.id);
+        });
+
+        fila.appendChild(abrir);
+        fila.appendChild(borrar);
+        elementos.listaChats.appendChild(fila);
     });
-
-    fila.append(abrir, eliminar);
-    listaChats.appendChild(fila);
-  }
 }
 
-function renderizarTodo() {
-  renderizarLista();
-  renderizarMensajes();
+/* =========================================================
+   CREAR, ABRIR Y ELIMINAR CONVERSACIONES
+   ========================================================= */
+
+function nuevaConversacion() {
+    detenerLectura();
+
+    chatActualId = null;
+    ultimoTextoAsistente = "";
+    imagenAdjunta = null;
+    textoArchivoAdjunto = "";
+    nombreArchivoAdjunto = "";
+
+    limpiarAdjuntoVisual();
+    if (elementos.mensaje) elementos.mensaje.value = "";
+
+    mostrarBienvenida();
+    actualizarInterfazHistorial();
+    mostrarEstado("Nueva conversación");
+    ajustarAlturaTexto();
+
+    if (elementos.sidebar && window.innerWidth <= 800) {
+        elementos.sidebar.classList.remove("abierto");
+    }
+
+    if (elementos.mensaje) elementos.mensaje.focus();
 }
 
-function establecerEstado(texto, error = false) {
-  estadoEl.textContent = texto;
-  estadoEl.style.color = error ? "#ff9292" : "#a9e8bd";
+function abrirChat(id) {
+    detenerLectura();
+
+    const chat = chats.find(item => item.id === id);
+    if (!chat) return;
+
+    chatActualId = id;
+    imagenAdjunta = null;
+    textoArchivoAdjunto = "";
+    nombreArchivoAdjunto = "";
+
+    limpiarAdjuntoVisual();
+
+    if (elementos.mensaje) elementos.mensaje.value = "";
+
+    mostrarMensajesChat(chat);
+    actualizarInterfazHistorial();
+    mostrarEstado("Conversación abierta");
+    ajustarAlturaTexto();
+
+    if (elementos.sidebar && window.innerWidth <= 800) {
+        elementos.sidebar.classList.remove("abierto");
+    }
 }
+
+function eliminarChat(id) {
+    const chat = chats.find(item => item.id === id);
+    if (!chat) return;
+
+    const confirmar = window.confirm(
+        `¿Quieres eliminar la conversación "${chat.titulo}"?`
+    );
+
+    if (!confirmar) return;
+
+    chats = chats.filter(item => item.id !== id);
+
+    if (chatActualId === id) {
+        chatActualId = null;
+        ultimoTextoAsistente = "";
+        mostrarBienvenida();
+        mostrarEstado("Conversación eliminada");
+    }
+
+    guardarChats();
+    actualizarInterfazHistorial();
+}
+
+function asegurarChat(textoInicial) {
+    let chat = obtenerChatActual();
+
+    if (!chat) {
+        chat = {
+            id: crearId(),
+            titulo: limitarTitulo(textoInicial),
+            mensajes: [],
+            fecha: Date.now(),
+            actualizado: Date.now()
+        };
+
+        chats.push(chat);
+        chatActualId = chat.id;
+    } else if (!chat.mensajes.length) {
+        chat.titulo = limitarTitulo(textoInicial);
+    }
+
+    return chat;
+}
+
+/* =========================================================
+   PREGUNTAS SOBRE EL CREADOR
+   ========================================================= */
+
+function esPreguntaSobreCreador(texto) {
+    const t = String(texto || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+
+    const preguntaCreador =
+        /(quien|quienes|por quien|por quienes).{0,70}(creo|creado|creada|desarrollo|desarrollado|hizo|fabrico|programo|fund[oó]|es el creador|es su creador)/.test(t) ||
+        /(quien te creo|quien te hizo|quien te desarrollo|quien creo ia todo|quien hizo ia todo|quien es tu creador|quien te programo|quien esta detras de ia todo|de quien es ia todo)/.test(t);
+
+    return preguntaCreador;
+}
+
+function respuestaCreador() {
+    return `IA TODO fue creado por ${NOMBRE_CREADOR}. No puedo dar más información sobre el creador.`;
+}
+
+/* =========================================================
+   ADJUNTAR IMÁGENES Y ARCHIVOS
+   ========================================================= */
+
+function limpiarAdjuntoVisual() {
+    if (elementos.archivoNombre) {
+        elementos.archivoNombre.textContent = "";
+        elementos.archivoNombre.style.display = "none";
+    }
+
+    if (elementos.borrarAdjuntoBtn) {
+        elementos.borrarAdjuntoBtn.style.display = "none";
+    }
+
+    if (elementos.imagenInput) elementos.imagenInput.value = "";
+    if (elementos.archivoInput) elementos.archivoInput.value = "";
+}
+
+function actualizarAdjuntoVisual(nombre) {
+    if (elementos.archivoNombre) {
+        elementos.archivoNombre.textContent = "Adjunto: " + nombre;
+        elementos.archivoNombre.style.display = "inline-block";
+    }
+
+    if (elementos.borrarAdjuntoBtn) {
+        elementos.borrarAdjuntoBtn.style.display = "inline-flex";
+    }
+}
+
+function quitarAdjunto() {
+    imagenAdjunta = null;
+    textoArchivoAdjunto = "";
+    nombreArchivoAdjunto = "";
+    limpiarAdjuntoVisual();
+    mostrarEstado("Archivo adjunto eliminado");
+}
+
+function leerArchivoComoDataURL(archivo) {
+    return new Promise((resolve, reject) => {
+        const lector = new FileReader();
+
+        lector.onload = () => resolve(lector.result);
+        lector.onerror = () => reject(new Error("No se pudo leer la imagen."));
+        lector.readAsDataURL(archivo);
+    });
+}
+
+async function seleccionarImagen(event) {
+    const archivo = event.target.files && event.target.files[0];
+    if (!archivo) return;
+
+    const limite = MAX_IMAGEN_MB * 1024 * 1024;
+
+    if (!archivo.type.startsWith("image/")) {
+        mostrarEstado("Selecciona un archivo de imagen.");
+        event.target.value = "";
+        return;
+    }
+
+    if (archivo.size > limite) {
+        mostrarEstado(`La imagen debe pesar menos de ${MAX_IMAGEN_MB} MB.`);
+        event.target.value = "";
+        return;
+    }
+
+    try {
+        const dataURL = await leerArchivoComoDataURL(archivo);
+
+        imagenAdjunta = {
+            mime: archivo.type || "image/jpeg",
+            data: String(dataURL).split(",")[1]
+        };
+
+        textoArchivoAdjunto = "";
+        nombreArchivoAdjunto = archivo.name;
+
+        actualizarAdjuntoVisual(archivo.name);
+        mostrarEstado("Imagen adjunta");
+    } catch (error) {
+        console.error(error);
+        mostrarEstado("No se pudo leer la imagen.");
+    }
+}
+
+async function seleccionarArchivo(event) {
+    const archivo = event.target.files && event.target.files[0];
+    if (!archivo) return;
+
+    const limite = MAX_ARCHIVO_MB * 1024 * 1024;
+
+    if (archivo.size > limite) {
+        mostrarEstado(`El archivo debe pesar menos de ${MAX_ARCHIVO_MB} MB.`);
+        event.target.value = "";
+        return;
+    }
+
+    const tiposPermitidos = [
+        ".txt", ".md", ".csv", ".json", ".js", ".py",
+        ".html", ".css", ".xml", ".log"
+    ];
+
+    const nombre = archivo.name.toLowerCase();
+    const permitido = tiposPermitidos.some(ext => nombre.endsWith(ext));
+
+    if (!permitido && !archivo.type.startsWith("text/")) {
+        mostrarEstado(
+            "Este lector admite archivos de texto, código, CSV y JSON. " +
+            "PDF y Word requieren extracción de texto adicional."
+        );
+        event.target.value = "";
+        return;
+    }
+
+    try {
+        textoArchivoAdjunto = await archivo.text();
+        nombreArchivoAdjunto = archivo.name;
+        imagenAdjunta = null;
+
+        actualizarAdjuntoVisual(archivo.name);
+        mostrarEstado("Archivo de texto adjunto");
+    } catch (error) {
+        console.error(error);
+        mostrarEstado("No se pudo leer el archivo.");
+    }
+}
+
+/* =========================================================
+   ENVÍO DE MENSAJES
+   ========================================================= */
 
 async function enviarMensaje() {
-  if (ocupado) return;
+    if (enviando) return;
 
-  const textoOriginal = entrada.value.trim();
-  const texto = textoArchivo
-    ? textoOriginal + "\n\nContenido del archivo adjunto:\n" + textoArchivo
-    : textoOriginal;
+    const textoOriginal = elementos.mensaje
+        ? elementos.mensaje.value.trim()
+        : "";
 
-  if (!texto && !imagenAdjunta) {
-    establecerEstado("Escribe un mensaje o adjunta una imagen.", true);
-    entrada.focus();
-    return;
-  }
+    if (!textoOriginal && !imagenAdjunta && !textoArchivoAdjunto) {
+        mostrarEstado("Escribe un mensaje o adjunta un archivo.");
+        return;
+    }
 
-  asegurarChat();
+    let textoParaEnviar = textoOriginal;
 
-  const imagenParaEnviar = imagenAdjunta;
+    if (textoArchivoAdjunto) {
+        textoParaEnviar +=
+            `\n\nContenido del archivo "${nombreArchivoAdjunto}":\n` +
+            textoArchivoAdjunto.slice(0, 30000);
+    }
 
-  agregarMensaje(
-    "user",
-    textoOriginal || (imagenParaEnviar ? "Analiza esta imagen." : ""),
-    imagenParaEnviar
-  );
+    const textoVisible = textoOriginal ||
+        (imagenAdjunta ? "Analiza esta imagen, por favor." : "Analiza este archivo, por favor.");
 
-  const historialChat = chatActual().mensajes
-    .slice(0, -1)
-    .filter((m) => m.rol === "user" || m.rol === "assistant")
-    .map((m) => ({
-      rol: m.rol,
-      texto: m.texto
-    }));
+    const chat = asegurarChat(textoVisible);
 
-  entrada.value = "";
-  imagenAdjunta = null;
-  textoArchivo = "";
-  imagenInput.value = "";
-  archivoInput.value = "";
-  archivoNombre.textContent = "";
-
-  ocupado = true;
-  enviarBtn.disabled = true;
-  enviarBtn.textContent = "Pensando...";
-  establecerEstado("● IA TODO está pensando...");
-
-  try {
-    const respuesta = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        mensaje: texto,
-        historial: historialChat,
-        imagen: imagenParaEnviar
-          ? {
-              mime: imagenParaEnviar.mime,
-              data: imagenParaEnviar.data
-            }
-          : null
-      })
+    chat.mensajes.push({
+        rol: "user",
+        texto: textoVisible
     });
 
-    const datos = await respuesta.json().catch(() => ({}));
+    chat.actualizado = Date.now();
 
-    if (!respuesta.ok) {
-      throw new Error(
-        datos.texto || "Error del servidor: " + respuesta.status
-      );
+    if (elementos.mensajes) {
+        if (!elementos.mensajes.querySelector(".mensaje-chat")) {
+            elementos.mensajes.innerHTML = "";
+        }
+
+        agregarMensajeVisual("user", textoVisible);
+
+        if (imagenAdjunta) {
+            const nota = document.createElement("div");
+            nota.className = "nota-adjunto";
+            nota.textContent = "Imagen adjunta: " + nombreArchivoAdjunto;
+            elementos.mensajes.appendChild(nota);
+        }
+
+        if (textoArchivoAdjunto) {
+            const nota = document.createElement("div");
+            nota.className = "nota-adjunto";
+            nota.textContent = "Archivo adjunto: " + nombreArchivoAdjunto;
+            elementos.mensajes.appendChild(nota);
+        }
     }
 
-    if (typeof datos.texto !== "string") {
-      throw new Error("El servidor no devolvió una respuesta válida.");
+    if (elementos.mensaje) elementos.mensaje.value = "";
+
+    const imagenParaEnviar = imagenAdjunta
+        ? { ...imagenAdjunta }
+        : null;
+
+    imagenAdjunta = null;
+    textoArchivoAdjunto = "";
+    nombreArchivoAdjunto = "";
+    limpiarAdjuntoVisual();
+
+    guardarChats();
+    actualizarInterfazHistorial();
+    ajustarAlturaTexto();
+    desplazarAbajo();
+
+    /* Respuesta controlada para la pregunta sobre el creador. */
+    if (esPreguntaSobreCreador(textoOriginal)) {
+        const respuesta = respuestaCreador();
+
+        chat.mensajes.push({
+            rol: "assistant",
+            texto: respuesta
+        });
+
+        chat.actualizado = Date.now();
+        ultimoTextoAsistente = respuesta;
+
+        agregarMensajeVisual("assistant", respuesta);
+        guardarChats();
+        actualizarInterfazHistorial();
+        desplazarAbajo();
+        mostrarEstado("Listo para ayudarte");
+        return;
     }
 
-    agregarMensaje("assistant", datos.texto);
-    establecerEstado("● Lista para ayudarte");
-  } catch (error) {
-    console.error("Error al enviar mensaje:", error);
-    agregarMensaje(
-      "assistant",
-      "No pude enviar el mensaje: " +
-      (error.message || "error de conexión") +
-      "\n\nRevisa los registros de Render y vuelve a intentarlo."
-    );
-    establecerEstado("● Error de conexión", true);
-  } finally {
-    ocupado = false;
-    enviarBtn.disabled = false;
-    enviarBtn.textContent = "Enviar ↑";
-    entrada.focus();
-  }
+    const historial = chat.mensajes
+        .slice(0, -1)
+        .slice(-20)
+        .map(m => ({
+            rol: m.rol,
+            texto: m.texto
+        }));
+
+    enviando = true;
+
+    if (elementos.enviarBtn) {
+        elementos.enviarBtn.disabled = true;
+        elementos.enviarBtn.textContent = "Enviando…";
+    }
+
+    mostrarEstado("IA TODO está pensando…");
+
+    const indicador = document.createElement("div");
+    indicador.className = "mensaje-chat mensaje-asistente indicador-espera";
+    indicador.textContent = "IA TODO está preparando tu respuesta…";
+
+    if (elementos.mensajes) {
+        elementos.mensajes.appendChild(indicador);
+        desplazarAbajo();
+    }
+
+    try {
+        const respuestaHTTP = await fetch("/api/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                mensaje: textoParaEnviar,
+                historial: historial,
+                imagen: imagenParaEnviar
+            })
+        });
+
+        let datos = {};
+
+        try {
+            datos = await respuestaHTTP.json();
+        } catch {
+            throw new Error("El servidor devolvió una respuesta no válida.");
+        }
+
+        if (!respuestaHTTP.ok) {
+            throw new Error(
+                datos.texto || `Error del servidor (${respuestaHTTP.status}).`
+            );
+        }
+
+        const respuesta = String(
+            datos.texto || "No recibí una respuesta de la IA."
+        );
+
+        if (indicador.parentNode) indicador.remove();
+
+        chat.mensajes.push({
+            rol: "assistant",
+            texto: respuesta
+        });
+
+        chat.actualizado = Date.now();
+        ultimoTextoAsistente = respuesta;
+
+        agregarMensajeVisual("assistant", respuesta);
+
+        guardarChats();
+        actualizarInterfazHistorial();
+        mostrarEstado("Lista para ayudarte");
+        desplazarAbajo();
+    } catch (error) {
+        console.error("Error enviando el mensaje:", error);
+
+        if (indicador.parentNode) indicador.remove();
+
+        const aviso = "No se pudo obtener una respuesta. " +
+            (error && error.message
+                ? error.message
+                : "Comprueba tu conexión e inténtalo de nuevo.");
+
+        agregarMensajeVisual("assistant", aviso);
+        mostrarEstado("No se pudo completar la solicitud");
+    } finally {
+        enviando = false;
+
+        if (elementos.enviarBtn) {
+            elementos.enviarBtn.disabled = false;
+            elementos.enviarBtn.textContent = "Enviar ↑";
+        }
+
+        if (elementos.mensaje) elementos.mensaje.focus();
+    }
 }
 
-enviarBtn.addEventListener("click", enviarMensaje);
+/* =========================================================
+   DICTADO POR VOZ
+   ========================================================= */
 
-entrada.addEventListener("keydown", (evento) => {
-  if (evento.key === "Enter" && !evento.shiftKey) {
-    evento.preventDefault();
-    enviarMensaje();
-  }
-});
+function iniciarDictado() {
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
 
-$("nuevoChat").addEventListener("click", crearChat);
+    if (!SpeechRecognition) {
+        mostrarEstado(
+            "Tu navegador no admite dictado por voz. Prueba con Chrome."
+        );
+        return;
+    }
 
-$("fotoBtn").addEventListener("click", () => imagenInput.click());
-$("archivoBtn").addEventListener("click", () => archivoInput.click());
+    if (reconocimientoVoz) {
+        reconocimientoVoz.stop();
+        reconocimientoVoz = null;
+        mostrarEstado("Dictado detenido");
+        return;
+    }
 
-imagenInput.addEventListener("change", () => {
-  const archivo = imagenInput.files?.[0];
-  if (!archivo) return;
+    reconocimientoVoz = new SpeechRecognition();
+    reconocimientoVoz.lang = "es-CO";
+    reconocimientoVoz.continuous = false;
+    reconocimientoVoz.interimResults = false;
 
-  if (!archivo.type.startsWith("image/")) {
-    establecerEstado("Selecciona un archivo de imagen.", true);
-    imagenInput.value = "";
-    return;
-  }
-
-  if (archivo.size > 5 * 1024 * 1024) {
-    establecerEstado("La imagen debe pesar menos de 5 MB.", true);
-    imagenInput.value = "";
-    return;
-  }
-
-  const lector = new FileReader();
-
-  lector.onload = () => {
-    const resultado = String(lector.result || "");
-    const partes = resultado.split(",");
-
-    imagenAdjunta = {
-      mime: archivo.type || "image/jpeg",
-      data: partes.length > 1 ? partes[1] : ""
+    reconocimientoVoz.onstart = () => {
+        mostrarEstado("Escuchando… habla ahora");
+        if (elementos.dictarBtn) {
+            elementos.dictarBtn.textContent = "Detener dictado";
+        }
     };
 
-    archivoNombre.textContent = "Imagen lista: " + archivo.name;
-    establecerEstado("● Imagen adjunta");
-  };
+    reconocimientoVoz.onresult = event => {
+        const resultado = event.results[0][0].transcript;
 
-  lector.onerror = () => {
-    establecerEstado("No se pudo leer la imagen.", true);
-  };
+        if (elementos.mensaje) {
+            const actual = elementos.mensaje.value.trim();
+            elementos.mensaje.value =
+                actual ? actual + " " + resultado : resultado;
 
-  lector.readAsDataURL(archivo);
-});
+            elementos.mensaje.focus();
+            ajustarAlturaTexto();
+        }
+    };
 
-archivoInput.addEventListener("change", async () => {
-  const archivo = archivoInput.files?.[0];
-  if (!archivo) return;
+    reconocimientoVoz.onerror = event => {
+        console.error("Error de dictado:", event.error);
+        mostrarEstado("No se pudo reconocer la voz. Revisa el permiso del micrófono.");
+    };
 
-  if (archivo.size > 1024 * 1024) {
-    establecerEstado("El archivo debe pesar menos de 1 MB.", true);
-    archivoInput.value = "";
-    return;
-  }
+    reconocimientoVoz.onend = () => {
+        reconocimientoVoz = null;
 
-  try {
-    textoArchivo = await archivo.text();
-    archivoNombre.textContent = "Archivo listo: " + archivo.name;
-    establecerEstado("● Archivo adjunto");
-  } catch {
-    textoArchivo = "";
-    establecerEstado("No se pudo leer el archivo.", true);
-  }
-});
+        if (elementos.dictarBtn) {
+            elementos.dictarBtn.textContent = "Dictar";
+        }
+    };
 
-$("borrarAdjuntoBtn").addEventListener("click", () => {
-  imagenAdjunta = null;
-  textoArchivo = "";
-  imagenInput.value = "";
-  archivoInput.value = "";
-  archivoNombre.textContent = "";
-  establecerEstado("● Archivo eliminado");
-});
-
-$("compartirBtn").addEventListener("click", async () => {
-  const chat = chatActual();
-
-  if (!chat || chat.mensajes.length === 0) {
-    establecerEstado("No hay mensajes para compartir.", true);
-    return;
-  }
-
-  const contenido = chat.mensajes
-    .map((m) => (m.rol === "user" ? "Tú: " : "IA TODO: ") + m.texto)
-    .join("\n\n");
-
-  try {
-    if (navigator.share) {
-      await navigator.share({
-        title: chat.titulo || "Conversación con IA TODO",
-        text: contenido
-      });
-    } else {
-      await navigator.clipboard.writeText(contenido);
-      establecerEstado("● Conversación copiada para compartir");
-    }
-  } catch (error) {
-    if (error.name !== "AbortError") {
-      establecerEstado("No se pudo compartir la conversación.", true);
-    }
-  }
-});
-
-$("leerBtn").addEventListener("click", () => {
-  if (!("speechSynthesis" in window)) {
-    establecerEstado("Tu navegador no admite lectura en voz alta.", true);
-    return;
-  }
-
-  const chat = chatActual();
-  const ultimo = chat?.mensajes
-    .slice()
-    .reverse()
-    .find((m) => m.rol === "assistant" && m.texto);
-
-  if (!ultimo) {
-    establecerEstado("Todavía no hay una respuesta para leer.", true);
-    return;
-  }
-
-  speechSynthesis.cancel();
-  const voz = new SpeechSynthesisUtterance(ultimo.texto);
-  voz.lang = "es-CO";
-  speechSynthesis.speak(voz);
-});
-
-$("dictarBtn").addEventListener("click", () => {
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    establecerEstado(
-      "Tu navegador no admite dictado por voz. Prueba Chrome.",
-      true
-    );
-    return;
-  }
-
-  if (reconocimiento) {
-    reconocimiento.stop();
-    reconocimiento = null;
-    establecerEstado("● Dictado detenido");
-    return;
-  }
-
-  reconocimiento = new SpeechRecognition();
-  reconocimiento.lang = "es-CO";
-  reconocimiento.interimResults = false;
-  reconocimiento.continuous = false;
-
-  reconocimiento.onresult = (evento) => {
-    const resultado = evento.results[0][0].transcript;
-    entrada.value = (entrada.value + " " + resultado).trim();
-    entrada.focus();
-  };
-
-  reconocimiento.onerror = () => {
-    establecerEstado("No se pudo reconocer la voz.", true);
-  };
-
-  reconocimiento.onend = () => {
-    reconocimiento = null;
-    if (!ocupado) establecerEstado("● Lista para ayudarte");
-  };
-
-  establecerEstado("● Escuchando...");
-  reconocimiento.start();
-});
-
-$("menuBtn").addEventListener("click", () => {
-  $("sidebar").classList.toggle("abierta");
-});
-
-if (chats.length) {
-  chatActualId = chats[0].id;
-} else {
-  crearChat();
+    reconocimientoVoz.start();
 }
 
-renderizarTodo();
+/* =========================================================
+   LECTURA EN VOZ ALTA
+   ========================================================= */
 
+function detenerLectura() {
+    if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+    }
+}
+
+function leerRespuesta() {
+    if (!("speechSynthesis" in window)) {
+        mostrarEstado("Tu navegador no admite lectura en voz alta.");
+        return;
+    }
+
+    detenerLectura();
+
+    if (!ultimoTextoAsistente) {
+        const chat = obtenerChatActual();
+
+        if (chat) {
+            const mensajes = chat.mensajes.filter(m => m.rol === "assistant");
+            if (mensajes.length) {
+                ultimoTextoAsistente = mensajes[mensajes.length - 1].texto;
+            }
+        }
+    }
+
+    if (!ultimoTextoAsistente) {
+        mostrarEstado("Todavía no hay una respuesta para leer.");
+        return;
+    }
+
+    const voz = new SpeechSynthesisUtterance(ultimoTextoAsistente);
+    voz.lang = "es-CO";
+    voz.rate = 1;
+    voz.pitch = 1;
+
+    voz.onstart = () => mostrarEstado("Leyendo respuesta…");
+    voz.onend = () => mostrarEstado("Lista para ayudarte");
+    voz.onerror = () => mostrarEstado("No se pudo reproducir la lectura.");
+
+    window.speechSynthesis.speak(voz);
+}
+
+/* =========================================================
+   COMPARTIR CONVERSACIÓN
+   ========================================================= */
+
+async function compartirConversacion() {
+    const chat = obtenerChatActual();
+
+    if (!chat || chat.mensajes.length === 0) {
+        mostrarEstado("Todavía no hay una conversación para compartir.");
+        return;
+    }
+
+    const contenido = [
+        "IA TODO — " + chat.titulo,
+        "",
+        ...chat.mensajes.map(m =>
+            (m.rol === "user" ? "Tú: " : "IA TODO: ") + m.texto
+        )
+    ].join("\n\n");
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: "Conversación de IA TODO",
+                text: contenido
+            });
+
+            mostrarEstado("Conversación compartida");
+        } else if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(contenido);
+            mostrarEstado("Conversación copiada al portapapeles");
+        } else {
+            const area = document.createElement("textarea");
+            area.value = contenido;
+            area.style.position = "fixed";
+            area.style.opacity = "0";
+            document.body.appendChild(area);
+            area.select();
+
+            const copiado = document.execCommand("copy");
+            area.remove();
+
+            mostrarEstado(
+                copiado
+                    ? "Conversación copiada al portapapeles"
+                    : "No se pudo copiar. Intenta seleccionar el texto manualmente."
+            );
+        }
+    } catch (error) {
+        if (error && error.name === "AbortError") return;
+
+        console.error("Error compartiendo:", error);
+        mostrarEstado("No se pudo compartir la conversación.");
+    }
+}
+
+/* =========================================================
+   AJUSTAR EL CAMPO DE TEXTO
+   ========================================================= */
+
+function ajustarAlturaTexto() {
+    if (!elementos.mensaje) return;
+
+    elementos.mensaje.style.height = "auto";
+    elementos.mensaje.style.height =
+        Math.min(elementos.mensaje.scrollHeight, 180) + "px";
+}
+
+/* =========================================================
+   EVENTOS
+   ========================================================= */
+
+function conectarEventos() {
+    if (elementos.nuevoChat) {
+        elementos.nuevoChat.addEventListener("click", nuevaConversacion);
+    }
+
+    if (elementos.enviarBtn) {
+        elementos.enviarBtn.addEventListener("click", enviarMensaje);
+    }
+
+    if (elementos.mensaje) {
+        elementos.mensaje.addEventListener("keydown", event => {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                enviarMensaje();
+            }
+        });
+
+        elementos.mensaje.addEventListener("input", ajustarAlturaTexto);
+    }
+
+    if (elementos.fotoBtn && elementos.imagenInput) {
+        elementos.fotoBtn.addEventListener("click", () => {
+            elementos.imagenInput.click();
+        });
+    }
+
+    if (elementos.archivoBtn && elementos.archivoInput) {
+        elementos.archivoBtn.addEventListener("click", () => {
+            elementos.archivoInput.click();
+        });
+    }
+
+    if (elementos.imagenInput) {
+        elementos.imagenInput.addEventListener("change", seleccionarImagen);
+    }
+
+    if (elementos.archivoInput) {
+        elementos.archivoInput.addEventListener("change", seleccionarArchivo);
+    }
+
+    if (elementos.borrarAdjuntoBtn) {
+        elementos.borrarAdjuntoBtn.addEventListener("click", quitarAdjunto);
+    }
+
+    if (elementos.dictarBtn) {
+        elementos.dictarBtn.addEventListener("click", iniciarDictado);
+    }
+
+    if (elementos.leerBtn) {
+        elementos.leerBtn.addEventListener("click", leerRespuesta);
+    }
+
+    if (elementos.compartirBtn) {
+        elementos.compartirBtn.addEventListener("click", compartirConversacion);
+    }
+
+    if (elementos.menuBtn && elementos.sidebar) {
+        elementos.menuBtn.addEventListener("click", () => {
+            elementos.sidebar.classList.toggle("abierto");
+        });
+    }
+}
+
+/* =========================================================
+   INICIAR IA TODO
+   ========================================================= */
+
+function iniciarIATodo() {
+    cargarChats();
+    conectarEventos();
+    actualizarInterfazHistorial();
+
+    const ultimoChat = chats
+        .filter(chat => chat.mensajes.length > 0)
+        .sort((a, b) => (b.actualizado || b.fecha) - (a.actualizado || a.fecha))[0];
+
+    /*
+      Al entrar por primera vez se muestra la bienvenida.
+      No se abre automáticamente un chat viejo.
+      Los chats anteriores siguen disponibles en el historial.
+    */
+    chatActualId = null;
+    ultimoTextoAsistente = "";
+
+    mostrarBienvenida();
+    mostrarEstado("Lista para ayudarte");
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", iniciarIATodo);
+} else {
+    iniciarIATodo();
+}
