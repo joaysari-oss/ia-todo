@@ -1,17 +1,17 @@
 
 import os
-import secrets
-
-from flask import Flask, render_template, request, jsonify, session
+import logging
+from flask import Flask, render_template, request, jsonify
 from ai.brain import preguntar
 
+logging.basicConfig(level=logging.INFO)
 app = Flask(
     __name__,
     template_folder="interface",
     static_folder="static"
 )
 
-app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024
 
 
 @app.route("/")
@@ -21,97 +21,68 @@ def home():
 
 @app.route("/health")
 def health():
-    return jsonify({"ok": True})
-
-
-def limpiar_historial(historial):
-    if not isinstance(historial, list):
-        return []
-
-    limpio = []
-
-    for mensaje in historial[-20:]:
-        if not isinstance(mensaje, dict):
-            continue
-
-        rol = mensaje.get("rol")
-        texto = mensaje.get("texto", "")
-
-        if rol in ("user", "assistant") and isinstance(texto, str):
-            limpio.append({
-                "rol": rol,
-                "texto": texto[:10000]
-            })
-
-    return limpio
+    return jsonify({"status": "ok"})
 
 
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
-    datos = request.get_json(silent=True) or {}
-
-    mensaje = str(datos.get("mensaje", "")).strip()
-    historial = limpiar_historial(datos.get("historial", []))
-    imagen = datos.get("imagen")
-
-    codigo_creador = os.getenv(
-        "CREATOR_CODE",
-        "creador_joao_777"
-    )
-
-    # El código se verifica en el servidor.
-    if mensaje == codigo_creador:
-        session["modo_creador"] = True
-
-        return jsonify({
-            "texto": "⭐ ¡Modo creador activado!",
-            "modo_creador": True
-        })
-
-    if mensaje.lower() in (
-        "salir del modo creador",
-        "/salir_creador"
-    ):
-        session["modo_creador"] = False
-
-        return jsonify({
-            "texto": "Modo creador desactivado.",
-            "modo_creador": False
-        })
-
-    if not mensaje and not imagen:
-        return jsonify({
-            "texto": "Escribe un mensaje o adjunta una imagen."
-        }), 400
-
     try:
+        datos = request.get_json(silent=True) or {}
+
+        mensaje = str(datos.get("mensaje", "") or "").strip()
+        historial = datos.get("historial", [])
+        imagen = datos.get("imagen")
+
+        if not isinstance(historial, list):
+            historial = []
+
+        if not mensaje and not imagen:
+            return jsonify({
+                "texto": "Escribe un mensaje o adjunta una imagen."
+            }), 400
+
         respuesta = preguntar(
             mensaje_usuario=mensaje,
             historial=historial,
             imagen=imagen
         )
 
-        return jsonify({
-            "texto": str(respuesta),
-            "modo_creador": bool(
-                session.get("modo_creador", False)
-            )
-        })
+        return jsonify({"texto": respuesta})
 
     except Exception:
         app.logger.exception("Error en /api/chat")
-
         return jsonify({
-            "texto": (
-                "Ocurrió un error al responder. "
-                "Revisa los registros de Render."
-            )
+            "texto": "Ocurrió un error en el servidor. Revisa los registros de Render."
         }), 500
+
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    return api_chat()
+
+
+@app.route("/generar_titulo", methods=["POST"])
+def generar_titulo():
+    try:
+        datos = request.get_json(silent=True) or {}
+        mensaje = str(datos.get("mensaje", "") or "").strip()
+
+        if not mensaje:
+            return jsonify({"titulo": "Nueva conversación"})
+
+        titulo = mensaje[:45]
+        if len(mensaje) > 45:
+            titulo += "..."
+
+        return jsonify({"titulo": titulo})
+
+    except Exception:
+        app.logger.exception("Error al generar título")
+        return jsonify({"titulo": "Nueva conversación"})
 
 
 if __name__ == "__main__":
     app.run(
         host="0.0.0.0",
-        port=int(os.getenv("PORT", "5000")),
-        debug=False
+        port=int(os.environ.get("PORT", 5000))
     )
