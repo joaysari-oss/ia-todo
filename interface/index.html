@@ -485,6 +485,7 @@
         transform: translateX(-105%);
         transition: transform .22s ease;
         box-shadow: none;
+        overflow-y: auto;
       }
 
       .sidebar.abierta {
@@ -493,7 +494,12 @@
       }
 
       #menuBtn {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 11px;
+        min-width: 40px;
+        min-height: 40px;
       }
 
       header {
@@ -565,7 +571,14 @@
   <main class="principal">
     <header>
       <div class="encabezado-izquierdo">
-        <button class="acciones" id="menuBtn" aria-label="Abrir menú">☰</button>
+        <button
+          class="acciones"
+          id="menuBtn"
+          type="button"
+          aria-label="Abrir menú"
+          aria-controls="sidebar"
+          aria-expanded="false"
+        >☰</button>
         <div>
           <strong>Asistente inteligente</strong>
           <div class="subtitulo">Un mundo de posibilidades</div>
@@ -596,10 +609,10 @@
             <small>Encuentra ideas para tus proyectos.</small>
           </button>
 
-          <button class="sugerencia" data-pregunta="Busca información reciente en internet sobre las noticias importantes de hoy.">
-            <span>🌐</span>
-            <strong>Explora información</strong>
-            <small>Investiga temas y actualidad.</small>
+          <button class="sugerencia" data-pregunta="Ayúdame a resolver una duda paso a paso.">
+            <span>💬</span>
+            <strong>Resuelve tus dudas</strong>
+            <small>Obtén explicaciones claras y sencillas.</small>
           </button>
 
           <button class="sugerencia" data-pregunta="Ayúdame a crear un programa o un videojuego.">
@@ -654,6 +667,56 @@
         campo.value = boton.dataset.pregunta || "";
         campo.focus();
       });
+    });
+
+    // Abrir y cerrar la barra lateral en celulares.
+    const menuBtn = document.getElementById("menuBtn");
+    const sidebar = document.getElementById("sidebar");
+
+    function cerrarMenu() {
+      sidebar.classList.remove("abierta");
+      menuBtn.setAttribute("aria-expanded", "false");
+      menuBtn.setAttribute("aria-label", "Abrir menú");
+    }
+
+    function alternarMenu() {
+      const abierta = sidebar.classList.toggle("abierta");
+      menuBtn.setAttribute("aria-expanded", String(abierta));
+      menuBtn.setAttribute(
+        "aria-label",
+        abierta ? "Cerrar menú" : "Abrir menú"
+      );
+    }
+
+    menuBtn.addEventListener("click", (evento) => {
+      evento.stopPropagation();
+      alternarMenu();
+    });
+
+    // Cierra el menú al tocar fuera de la barra lateral.
+    document.addEventListener("click", (evento) => {
+      if (
+        window.matchMedia("(max-width: 760px)").matches &&
+        sidebar.classList.contains("abierta") &&
+        !sidebar.contains(evento.target) &&
+        !menuBtn.contains(evento.target)
+      ) {
+        cerrarMenu();
+      }
+    });
+
+    // Permite cerrar el menú con la tecla Escape.
+    document.addEventListener("keydown", (evento) => {
+      if (evento.key === "Escape") {
+        cerrarMenu();
+      }
+    });
+
+    // En pantallas grandes, mantiene la barra lateral normal.
+    window.addEventListener("resize", () => {
+      if (!window.matchMedia("(max-width: 760px)").matches) {
+        cerrarMenu();
+      }
     });
   </script>
 
