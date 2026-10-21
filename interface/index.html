@@ -399,6 +399,91 @@
       box-shadow: 0 7px 20px #08071c35, inset 0 1px #ffffff0b;
     }
 
+    /*
+      Compatibilidad con las clases que utiliza static/script.js.
+      No se modifica el JavaScript: aquí se da formato a los elementos
+      .mensaje-chat y .contenido-mensaje que crea el archivo existente.
+    */
+    #mensajes .mensaje-chat {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+      gap: 7px;
+      margin: 20px 0;
+      line-height: 1.75;
+      min-width: 0;
+    }
+
+    #mensajes .etiqueta-mensaje {
+      color: #c5b8ff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .35px;
+      padding: 0 4px;
+    }
+
+    #mensajes .contenido-mensaje {
+      display: block;
+      width: fit-content;
+      max-width: min(100%, 760px);
+      min-width: 40px;
+      padding: 15px 18px;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #514879;
+      border-left: 3px solid #9878ff;
+      border-radius: 6px 20px 20px 20px;
+      background: linear-gradient(145deg, #29264b, #22203f);
+      color: #f5f3ff;
+      box-shadow: 0 8px 24px #08071c33, inset 0 1px #ffffff08;
+      line-height: 1.8;
+    }
+
+    #mensajes .mensaje-usuario {
+      align-items: flex-end;
+    }
+
+    #mensajes .mensaje-usuario .etiqueta-mensaje {
+      color: #9ec7ff;
+      text-align: right;
+    }
+
+    #mensajes .mensaje-usuario .contenido-mensaje {
+      margin-left: auto;
+      border-color: #7160ad;
+      border-radius: 20px 6px 20px 20px;
+      background: linear-gradient(135deg, #40316f, #263f70);
+      box-shadow: 0 7px 20px #08071c35, inset 0 1px #ffffff0b;
+    }
+
+    #mensajes .indicador-espera {
+      width: fit-content;
+      max-width: 100%;
+      padding: 12px 16px;
+      margin: 18px 0;
+      border: 1px solid #514879;
+      border-radius: 6px 18px 18px 18px;
+      background: linear-gradient(145deg, #29264b, #22203f);
+      color: #d8d0ff;
+    }
+
+    /* La barra lateral admite el nombre de clase usado por el script. */
+    @media (max-width: 760px) {
+      .sidebar.abierto,
+      .sidebar.abierta {
+        transform: translateX(0);
+        box-shadow: 0 0 0 100vmax #09081caa;
+      }
+
+      #mensajes .contenido-mensaje {
+        max-width: 100%;
+        padding: 13px 14px;
+        font-size: 14px;
+      }
+    }
+
     .contenido img {
       display: block;
       max-width: min(100%, 360px);
