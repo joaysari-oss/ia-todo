@@ -1,13 +1,21 @@
 
 "use strict";
 
-/* =========================================
-   CONFIGURACIÓN DE IA TODO
-========================================= */
+/* =====================================================
+   IA TODO — CONFIGURACIÓN PRINCIPAL
+===================================================== */
 
-const CODIGO_CREADOR = "creador_joao_777";
-const NOMBRE_CREADOR = "João";
-const CLAVE_HISTORIAL = "iatodo_chats_v2";
+const CONFIG = Object.freeze({
+    codigoCreador: "creador_joao_777",
+    nombreCreador: "João",
+    claveHistorial: "iatodo_chats_v2",
+    idioma: "es-CO",
+    maxMensajesContexto: 20,
+    maxCaracteresArchivo: 100000,
+    maxAlturaTexto: 180,
+    maxTituloChat: 35,
+    endpointChat: "/api/chat"
+});
 
 const elementos = {
     sidebar: document.getElementById("sidebar"),
@@ -34,15 +42,17 @@ let archivoAdjunto = null;
 let esperandoRespuesta = false;
 let reconocimientoVoz = null;
 let leyendoRespuesta = false;
+let lecturaActual = null;
+let solicitudActual = 0;
 
-/* =========================================
+/* =====================================================
    UTILIDADES
-========================================= */
+===================================================== */
 
 function generarId() {
     return (
         Date.now().toString(36) +
-        Math.random().toString(36).substring(2, 9)
+        Math.random().toString(36).slice(2, 10)
     );
 }
 
@@ -52,15 +62,18 @@ function obtenerChatActual() {
 
 function guardarChats() {
     try {
-        localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(chats));
+        localStorage.setItem(
+            CONFIG.claveHistorial,
+            JSON.stringify(chats)
+        );
     } catch (error) {
-        console.error("No se pudo guardar el historial:", error);
+        console.error("Error al guardar las conversaciones:", error);
     }
 }
 
 function cargarChats() {
     try {
-        const guardados = localStorage.getItem(CLAVE_HISTORIAL);
+        const guardados = localStorage.getItem(CONFIG.claveHistorial);
         const datos = guardados ? JSON.parse(guardados) : [];
 
         chats = Array.isArray(datos)
@@ -71,7 +84,7 @@ function cargarChats() {
             )
             : [];
     } catch (error) {
-        console.error("No se pudo cargar el historial:", error);
+        console.error("Error al cargar las conversaciones:", error);
         chats = [];
     }
 
@@ -83,18 +96,18 @@ function cargarChats() {
 }
 
 function crearChatInterno() {
-    const nuevoChat = {
+    const chat = {
         id: generarId(),
         titulo: "Nueva conversación",
         mensajes: [],
         fecha: Date.now()
     };
 
-    chats.unshift(nuevoChat);
-    chatActualId = nuevoChat.id;
+    chats.unshift(chat);
+    chatActualId = chat.id;
     guardarChats();
 
-    return nuevoChat;
+    return chat;
 }
 
 function escaparHTML(texto) {
@@ -107,62 +120,124 @@ function escaparHTML(texto) {
 }
 
 function cerrarSidebarEnMovil() {
-    if (elementos.sidebar) {
-        elementos.sidebar.classList.remove("abierta");
-        elementos.sidebar.classList.remove("abierto");
-    }
+    if (!elementos.sidebar) return;
+
+    elementos.sidebar.classList.remove("abierta");
+    elementos.sidebar.classList.remove("abierto");
 }
 
-/* =========================================
-   BIENVENIDA Y TARJETAS
-========================================= */
+function desplazarAlFinal() {
+    if (!elementos.mensajes) return;
+
+    elementos.mensajes.scrollTop =
+        elementos.mensajes.scrollHeight;
+}
+
+function obtenerUltimaRespuesta(chat = obtenerChatActual()) {
+    if (!chat || !Array.isArray(chat.mensajes)) return null;
+
+    return [...chat.mensajes]
+        .reverse()
+        .find(mensaje =>
+            mensaje &&
+            mensaje.rol === "asistente" &&
+            typeof mensaje.texto === "string" &&
+            mensaje.texto.trim()
+        ) || null;
+}
+
+/* =====================================================
+   BIENVENIDA
+===================================================== */
 
 function mostrarBienvenida() {
     if (!elementos.mensajes) return;
 
-    elementos.mensajes.innerHTML = `
-        <div class="bienvenida">
-            <div class="bienvenida-icono">✦</div>
+    detenerLectura();
 
-            <h2>¡Hola! Soy IA TODO</h2>
+    elementos.mensajes.replaceChildren();
 
-            <p>
-                Tu inteligencia artificial multipropósito.
-                Pregúntame lo que quieras.
-            </p>
+    const bienvenida = document.createElement("div");
+    bienvenida.className = "bienvenida";
 
-            <div class="sugerencias">
-                <button class="sugerencia" type="button"
-                    data-pregunta="Explícame un tema difícil paso a paso">
-                    <span>📚</span>
-                    <strong>Aprender algo</strong>
-                    <small>Explicaciones fáciles</small>
-                </button>
+    const icono = document.createElement("div");
+    icono.className = "bienvenida-icono";
+    icono.textContent = "✦";
 
-                <button class="sugerencia" type="button"
-                    data-pregunta="Ayúdame a crear un videojuego">
-                    <span>🎮</span>
-                    <strong>Crear un videojuego</strong>
-                    <small>Ideas y programación</small>
-                </button>
+    const titulo = document.createElement("h2");
+    titulo.textContent = "¡Hola! Soy IA TODO";
 
-                <button class="sugerencia" type="button"
-                    data-pregunta="Dame una idea de negocio original">
-                    <span>💡</span>
-                    <strong>Crear una idea</strong>
-                    <small>Proyectos y negocios</small>
-                </button>
+    const descripcion = document.createElement("p");
+    descripcion.textContent =
+        "Tu inteligencia artificial multipropósito. Pregúntame lo que quieras.";
 
-                <button class="sugerencia" type="button"
-                    data-pregunta="Ayúdame a resolver un problema paso a paso">
-                    <span>🧠</span>
-                    <strong>Resolver un problema</strong>
-                    <small>Razonamiento paso a paso</small>
-                </button>
-            </div>
-        </div>
-    `;
+    const sugerencias = document.createElement("div");
+    sugerencias.className = "sugerencias";
+
+    const opciones = [
+        {
+            icono: "📚",
+            titulo: "Aprender algo",
+            descripcion: "Explicaciones fáciles",
+            pregunta: "Explícame un tema difícil paso a paso"
+        },
+        {
+            icono: "🎮",
+            titulo: "Crear un videojuego",
+            descripcion: "Ideas y programación",
+            pregunta: "Ayúdame a crear un videojuego"
+        },
+        {
+            icono: "💡",
+            titulo: "Crear una idea",
+            descripcion: "Proyectos y negocios",
+            pregunta: "Dame una idea de negocio original"
+        },
+        {
+            icono: "🧠",
+            titulo: "Resolver un problema",
+            descripcion: "Razonamiento paso a paso",
+            pregunta: "Ayúdame a resolver un problema paso a paso"
+        }
+    ];
+
+    opciones.forEach(opcion => {
+        const tarjeta = document.createElement("button");
+        tarjeta.type = "button";
+        tarjeta.className = "sugerencia";
+        tarjeta.dataset.pregunta = opcion.pregunta;
+
+        const iconoTarjeta = document.createElement("span");
+        iconoTarjeta.textContent = opcion.icono;
+
+        const tituloTarjeta = document.createElement("strong");
+        tituloTarjeta.textContent = opcion.titulo;
+
+        const descripcionTarjeta = document.createElement("small");
+        descripcionTarjeta.textContent = opcion.descripcion;
+
+        tarjeta.append(
+            iconoTarjeta,
+            tituloTarjeta,
+            descripcionTarjeta
+        );
+
+        sugerencias.appendChild(tarjeta);
+    });
+
+    bienvenida.append(
+        icono,
+        titulo,
+        descripcion,
+        sugerencias
+    );
+
+    elementos.mensajes.appendChild(bienvenida);
 }
+
+/* =====================================================
+   MOSTRAR MENSAJES
+===================================================== */
 
 function agregarMensajeVisual(rol, texto, opciones = {}) {
     if (!elementos.mensajes) return null;
@@ -182,11 +257,11 @@ function agregarMensajeVisual(rol, texto, opciones = {}) {
     contenido.className = "contenido-mensaje";
     contenido.textContent = String(texto ?? "");
 
-    contenedor.appendChild(etiqueta);
-    contenedor.appendChild(contenido);
+    contenedor.append(etiqueta, contenido);
 
     if (opciones.imagen) {
         const imagen = document.createElement("img");
+
         imagen.src = opciones.imagen;
         imagen.alt = "Imagen adjunta";
         imagen.className = "imagen-mensaje";
@@ -195,12 +270,13 @@ function agregarMensajeVisual(rol, texto, opciones = {}) {
         imagen.style.objectFit = "contain";
         imagen.style.borderRadius = "12px";
         imagen.style.marginTop = "10px";
+
         contenido.appendChild(document.createElement("br"));
         contenido.appendChild(imagen);
     }
 
     elementos.mensajes.appendChild(contenedor);
-    elementos.mensajes.scrollTop = elementos.mensajes.scrollHeight;
+    desplazarAlFinal();
 
     return contenedor;
 }
@@ -208,44 +284,44 @@ function agregarMensajeVisual(rol, texto, opciones = {}) {
 function mostrarIndicadorEspera() {
     quitarIndicadorEspera();
 
+    if (!elementos.mensajes) return;
+
     const indicador = document.createElement("div");
+
     indicador.className = "indicador-espera";
     indicador.id = "indicadorEspera";
     indicador.textContent = "IA TODO está pensando…";
+    indicador.setAttribute("role", "status");
+    indicador.setAttribute("aria-live", "polite");
 
     elementos.mensajes.appendChild(indicador);
-    elementos.mensajes.scrollTop = elementos.mensajes.scrollHeight;
+    desplazarAlFinal();
 }
 
 function quitarIndicadorEspera() {
-    const indicador = document.getElementById("indicadorEspera");
-
-    if (indicador) {
-        indicador.remove();
-    }
+    document.getElementById("indicadorEspera")?.remove();
 }
 
-/* =========================================
-   HISTORIAL DE CONVERSACIONES
-========================================= */
+/* =====================================================
+   HISTORIAL
+===================================================== */
 
 function actualizarInterfazHistorial() {
     if (!elementos.listaChats) return;
 
-    elementos.listaChats.innerHTML = "";
+    elementos.listaChats.replaceChildren();
 
     if (chats.length === 0) {
         const vacio = document.createElement("div");
         vacio.className = "historial-vacio";
         vacio.textContent = "Todavía no tienes conversaciones.";
+
         elementos.listaChats.appendChild(vacio);
         return;
     }
 
     chats.forEach(chat => {
         const fila = document.createElement("div");
-
-        // Clases compatibles con el CSS del HTML.
         fila.className = "chat-item";
 
         if (chat.id === chatActualId) {
@@ -258,9 +334,7 @@ function actualizarInterfazHistorial() {
         abrir.textContent = chat.titulo || "Nueva conversación";
         abrir.title = chat.titulo || "Nueva conversación";
 
-        abrir.addEventListener("click", () => {
-            abrirChat(chat.id);
-        });
+        abrir.addEventListener("click", () => abrirChat(chat.id));
 
         const borrar = document.createElement("button");
         borrar.type = "button";
@@ -274,8 +348,7 @@ function actualizarInterfazHistorial() {
             eliminarChat(chat.id);
         });
 
-        fila.appendChild(abrir);
-        fila.appendChild(borrar);
+        fila.append(abrir, borrar);
         elementos.listaChats.appendChild(fila);
     });
 }
@@ -283,23 +356,25 @@ function actualizarInterfazHistorial() {
 function actualizarTituloChat(chat) {
     if (!chat) return;
 
-    const primerMensaje = chat.mensajes.find(
+    const primero = chat.mensajes.find(
         mensaje => mensaje.rol === "usuario"
     );
 
-    if (primerMensaje && primerMensaje.texto) {
-        const titulo = primerMensaje.texto.trim();
-
-        chat.titulo = titulo.length > 35
-            ? titulo.substring(0, 35) + "…"
-            : titulo;
-    } else {
+    if (!primero || !primero.texto) {
         chat.titulo = "Nueva conversación";
+        return;
     }
+
+    const titulo = primero.texto.trim();
+
+    chat.titulo = titulo.length > CONFIG.maxTituloChat
+        ? titulo.slice(0, CONFIG.maxTituloChat) + "…"
+        : titulo;
 }
 
 function nuevaConversacion() {
     detenerLectura();
+    detenerDictado();
 
     crearChatInterno();
     actualizarInterfazHistorial();
@@ -309,6 +384,7 @@ function nuevaConversacion() {
 
     if (elementos.mensaje) {
         elementos.mensaje.value = "";
+        ajustarAlturaTexto();
         elementos.mensaje.focus();
     }
 }
@@ -319,8 +395,10 @@ function abrirChat(id) {
     if (!chat) return;
 
     detenerLectura();
+    detenerDictado();
 
     chatActualId = id;
+
     actualizarInterfazHistorial();
     renderizarChat(chat);
     cerrarSidebarEnMovil();
@@ -329,9 +407,10 @@ function abrirChat(id) {
 function renderizarChat(chat) {
     if (!elementos.mensajes) return;
 
-    elementos.mensajes.innerHTML = "";
+    detenerLectura();
+    elementos.mensajes.replaceChildren();
 
-    if (!chat || !Array.isArray(chat.mensajes) || chat.mensajes.length === 0) {
+    if (!chat || !chat.mensajes.length) {
         mostrarBienvenida();
         return;
     }
@@ -344,15 +423,17 @@ function renderizarChat(chat) {
         );
     });
 
-    elementos.mensajes.scrollTop = elementos.mensajes.scrollHeight;
+    desplazarAlFinal();
 }
 
 function eliminarChat(id) {
-    const confirmar = window.confirm(
-        "¿Seguro que quieres eliminar esta conversación?"
-    );
+    if (!window.confirm("¿Seguro que quieres eliminar esta conversación?")) {
+        return;
+    }
 
-    if (!confirmar) return;
+    if (id === chatActualId) {
+        detenerLectura();
+    }
 
     chats = chats.filter(chat => chat.id !== id);
 
@@ -370,41 +451,41 @@ function eliminarChat(id) {
     actualizarInterfazHistorial();
 }
 
-/* =========================================
-   RESPUESTA SOBRE EL CREADOR
-========================================= */
+/* =====================================================
+   IDENTIDAD DEL CREADOR
+===================================================== */
 
 function esPreguntaSobreCreador(texto) {
-    const pregunta = texto.toLowerCase();
+    const pregunta = String(texto || "")
+        .toLocaleLowerCase("es-CO")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
-    return (
-        pregunta.includes("quién te creó") ||
-        pregunta.includes("quien te creo") ||
-        pregunta.includes("quién te creo") ||
-        pregunta.includes("quien te creó") ||
-        pregunta.includes("quién es tu creador") ||
-        pregunta.includes("quien es tu creador") ||
-        pregunta.includes("quién te hizo") ||
-        pregunta.includes("quien te hizo") ||
-        pregunta.includes("quién te programó") ||
-        pregunta.includes("quien te programo") ||
-        pregunta.includes("quién te desarrolló") ||
-        pregunta.includes("quien te desarrollo")
-    );
+    const patrones = [
+        /quien te creo/,
+        /quien es tu creador/,
+        /quien te hizo/,
+        /quien te programo/,
+        /quien te desarrollo/,
+        /quien te construyo/,
+        /quien creo ia todo/,
+        /quien hizo ia todo/,
+        /quien es el creador/
+    ];
+
+    return patrones.some(patron => patron.test(pregunta));
 }
 
 function respuestaCreador() {
-    return `Fui creado por ${NOMBRE_CREADOR}. No puedo dar más información.`;
+    return `Fui creado por ${CONFIG.nombreCreador}. No puedo dar más información.`;
 }
 
-/* =========================================
-   ENVIAR MENSAJES A LA IA
-========================================= */
+/* =====================================================
+   CONEXIÓN CON EL SERVIDOR DE IA
+===================================================== */
 
 async function enviarMensaje() {
-    if (esperandoRespuesta) return;
-
-    if (!elementos.mensaje) return;
+    if (esperandoRespuesta || !elementos.mensaje) return;
 
     const texto = elementos.mensaje.value.trim();
 
@@ -414,30 +495,23 @@ async function enviarMensaje() {
 
     if (!chat) return;
 
-    const imagenParaEnviar = imagenAdjunta;
-    const archivoParaEnviar = archivoAdjunto;
+    const solicitud = ++solicitudActual;
+    const imagen = imagenAdjunta;
+    const archivo = archivoAdjunto;
 
     const textoVisible = texto ||
-        (imagenParaEnviar ? "Analiza esta imagen." : "Analiza este archivo.");
+        (imagen ? "Analiza esta imagen." : "Analiza este archivo.");
 
-    if (chat.mensajes.length === 0 && chat.titulo === "Nueva conversación") {
-        chat.titulo = textoVisible.length > 35
-            ? textoVisible.substring(0, 35) + "…"
-            : textoVisible;
-    }
-
-    const mensajeUsuario = {
+    chat.mensajes.push({
         rol: "usuario",
         texto: textoVisible,
         fecha: Date.now(),
-        imagen: imagenParaEnviar || null
-    };
-
-    chat.mensajes.push(mensajeUsuario);
-
-    agregarMensajeVisual("usuario", textoVisible, {
-        imagen: imagenParaEnviar || null
+        imagen: imagen || null
     });
+
+    actualizarTituloChat(chat);
+
+    agregarMensajeVisual("usuario", textoVisible, { imagen });
 
     elementos.mensaje.value = "";
     ajustarAlturaTexto();
@@ -447,11 +521,7 @@ async function enviarMensaje() {
     actualizarInterfazHistorial();
 
     esperandoRespuesta = true;
-
-    if (elementos.enviarBtn) {
-        elementos.enviarBtn.disabled = true;
-    }
-
+    cambiarEstadoEnviar(true);
     mostrarIndicadorEspera();
 
     try {
@@ -461,7 +531,7 @@ async function enviarMensaje() {
             respuesta = respuestaCreador();
         } else {
             const historial = chat.mensajes
-                .slice(-20)
+                .slice(-CONFIG.maxMensajesContexto)
                 .map(mensaje => ({
                     rol: mensaje.rol,
                     texto: mensaje.texto
@@ -469,15 +539,15 @@ async function enviarMensaje() {
 
             const cuerpo = {
                 mensaje: texto,
-                historial: historial,
-                imagen: imagenParaEnviar || null
+                historial,
+                imagen: imagen || null
             };
 
-            if (archivoParaEnviar) {
-                cuerpo.archivo = archivoParaEnviar;
+            if (archivo) {
+                cuerpo.archivo = archivo;
             }
 
-            const resultado = await fetch("/api/chat", {
+            const resultado = await fetch(CONFIG.endpointChat, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -490,7 +560,9 @@ async function enviarMensaje() {
             try {
                 datos = await resultado.json();
             } catch {
-                throw new Error("El servidor devolvió una respuesta que no es JSON.");
+                throw new Error(
+                    "El servidor devolvió una respuesta que no es JSON."
+                );
             }
 
             if (!resultado.ok) {
@@ -501,7 +573,8 @@ async function enviarMensaje() {
                 );
             }
 
-            respuesta = datos.texto ??
+            respuesta =
+                datos.texto ??
                 datos.respuesta ??
                 datos.message ??
                 datos.mensaje;
@@ -511,6 +584,8 @@ async function enviarMensaje() {
             }
         }
 
+        if (solicitud !== solicitudActual) return;
+
         quitarIndicadorEspera();
 
         chat.mensajes.push({
@@ -519,38 +594,47 @@ async function enviarMensaje() {
             fecha: Date.now()
         });
 
-        agregarMensajeVisual("asistente", respuesta);
+        if (obtenerChatActual()?.id === chat.id) {
+            agregarMensajeVisual("asistente", respuesta);
+        }
 
         actualizarTituloChat(chat);
         guardarChats();
         actualizarInterfazHistorial();
 
     } catch (error) {
-        console.error("Error al consultar la IA:", error);
+        console.error("Error al consultar IA TODO:", error);
 
-        quitarIndicadorEspera();
+        if (solicitud === solicitudActual) {
+            quitarIndicadorEspera();
 
-        const mensajeError =
-            "No pude obtener una respuesta. Revisa tu conexión e inténtalo de nuevo.";
-
-        agregarMensajeVisual("asistente", mensajeError);
-
-    } finally {
-        esperandoRespuesta = false;
-
-        if (elementos.enviarBtn) {
-            elementos.enviarBtn.disabled = false;
+            agregarMensajeVisual(
+                "asistente",
+                "No pude obtener una respuesta. Revisa tu conexión e inténtalo de nuevo."
+            );
         }
-
-        if (elementos.mensaje) {
-            elementos.mensaje.focus();
+    } finally {
+        if (solicitud === solicitudActual) {
+            esperandoRespuesta = false;
+            cambiarEstadoEnviar(false);
+            elementos.mensaje?.focus();
         }
     }
 }
 
-/* =========================================
+function cambiarEstadoEnviar(ocupado) {
+    if (!elementos.enviarBtn) return;
+
+    elementos.enviarBtn.disabled = ocupado;
+    elementos.enviarBtn.setAttribute(
+        "aria-busy",
+        ocupado ? "true" : "false"
+    );
+}
+
+/* =====================================================
    ARCHIVOS E IMÁGENES
-========================================= */
+===================================================== */
 
 function procesarArchivo(archivo) {
     if (!archivo) return;
@@ -580,7 +664,8 @@ function procesarArchivo(archivo) {
         archivoAdjunto = {
             nombre: archivo.name,
             tipo: archivo.type || "application/octet-stream",
-            contenido: String(evento.target.result || "").substring(0, 100000)
+            contenido: String(evento.target.result || "")
+                .slice(0, CONFIG.maxCaracteresArchivo)
         };
 
         imagenAdjunta = null;
@@ -623,36 +708,45 @@ function limpiarAdjunto() {
     }
 }
 
-/* =========================================
+/* =====================================================
    DICTADO POR VOZ
-========================================= */
+===================================================== */
 
 function iniciarDictado() {
     const Reconocimiento =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
 
     if (!Reconocimiento) {
-        alert("Tu navegador no admite dictado por voz. Prueba con Google Chrome.");
+        alert(
+            "Tu navegador no admite dictado por voz. Prueba con Google Chrome."
+        );
         return;
     }
 
     if (reconocimientoVoz) {
-        reconocimientoVoz.stop();
-        reconocimientoVoz = null;
+        detenerDictado();
         return;
     }
 
     reconocimientoVoz = new Reconocimiento();
-    reconocimientoVoz.lang = "es-CO";
+    reconocimientoVoz.lang = CONFIG.idioma;
     reconocimientoVoz.continuous = false;
     reconocimientoVoz.interimResults = false;
 
-    reconocimientoVoz.onresult = evento => {
-        const resultado = evento.results[0][0].transcript;
+    if (elementos.dictadoBtn) {
+        elementos.dictadoBtn.classList.add("escuchando");
+        elementos.dictadoBtn.setAttribute("aria-pressed", "true");
+        elementos.dictadoBtn.title = "Detener dictado";
+    }
 
-        if (elementos.mensaje) {
-            elementos.mensaje.value =
-                (elementos.mensaje.value + " " + resultado).trim();
+    reconocimientoVoz.onresult = evento => {
+        const resultado = evento.results?.[0]?.[0]?.transcript;
+
+        if (resultado && elementos.mensaje) {
+            elementos.mensaje.value = (
+                elementos.mensaje.value + " " + resultado
+            ).trim();
 
             ajustarAlturaTexto();
         }
@@ -664,14 +758,62 @@ function iniciarDictado() {
 
     reconocimientoVoz.onend = () => {
         reconocimientoVoz = null;
+        actualizarBotonDictado(false);
     };
 
-    reconocimientoVoz.start();
+    try {
+        reconocimientoVoz.start();
+    } catch (error) {
+        console.error("No se pudo iniciar el dictado:", error);
+        detenerDictado();
+    }
 }
 
-/* =========================================
-   LEER RESPUESTAS EN VOZ ALTA
-========================================= */
+function actualizarBotonDictado(activo) {
+    if (!elementos.dictadoBtn) return;
+
+    elementos.dictadoBtn.classList.toggle("escuchando", activo);
+    elementos.dictadoBtn.setAttribute(
+        "aria-pressed",
+        activo ? "true" : "false"
+    );
+    elementos.dictadoBtn.title = activo
+        ? "Detener dictado"
+        : "Dictar por voz";
+}
+
+function detenerDictado() {
+    const reconocimiento = reconocimientoVoz;
+    reconocimientoVoz = null;
+
+    if (reconocimiento) {
+        try {
+            reconocimiento.stop();
+        } catch (error) {
+            console.warn("No se pudo detener el dictado:", error);
+        }
+    }
+
+    actualizarBotonDictado(false);
+}
+
+/* =====================================================
+   LECTURA EN VOZ ALTA
+   El botón funciona como interruptor: leer / detener.
+===================================================== */
+
+function actualizarBotonLectura(activo) {
+    if (!elementos.leerBtn) return;
+
+    elementos.leerBtn.classList.toggle("leyendo", activo);
+    elementos.leerBtn.setAttribute(
+        "aria-pressed",
+        activo ? "true" : "false"
+    );
+    elementos.leerBtn.title = activo
+        ? "Detener lectura"
+        : "Leer respuesta";
+}
 
 function leerUltimaRespuesta() {
     if (!("speechSynthesis" in window)) {
@@ -679,13 +821,17 @@ function leerUltimaRespuesta() {
         return;
     }
 
-    const chat = obtenerChatActual();
+    // Si está leyendo, el mismo botón detiene la voz.
+    if (
+        leyendoRespuesta ||
+        window.speechSynthesis.speaking ||
+        window.speechSynthesis.pending
+    ) {
+        detenerLectura();
+        return;
+    }
 
-    if (!chat) return;
-
-    const ultimaRespuesta = [...chat.mensajes]
-        .reverse()
-        .find(mensaje => mensaje.rol === "asistente");
+    const ultimaRespuesta = obtenerUltimaRespuesta();
 
     if (!ultimaRespuesta) {
         alert("Todavía no hay una respuesta para leer.");
@@ -694,37 +840,76 @@ function leerUltimaRespuesta() {
 
     detenerLectura();
 
-    const voz = new SpeechSynthesisUtterance(ultimaRespuesta.texto);
-    voz.lang = "es-CO";
+    const texto = ultimaRespuesta.texto.trim();
+
+    if (!texto) {
+        alert("La respuesta no contiene texto para leer.");
+        return;
+    }
+
+    const voz = new SpeechSynthesisUtterance(texto);
+
+    voz.lang = CONFIG.idioma;
     voz.rate = 1;
     voz.pitch = 1;
+    voz.volume = 1;
+
+    lecturaActual = voz;
+    leyendoRespuesta = true;
+    actualizarBotonLectura(true);
 
     voz.onstart = () => {
         leyendoRespuesta = true;
+        actualizarBotonLectura(true);
     };
 
     voz.onend = () => {
-        leyendoRespuesta = false;
+        finalizarLectura(voz);
     };
 
-    voz.onerror = () => {
-        leyendoRespuesta = false;
+    voz.onerror = evento => {
+        // "canceled" y "interrupted" son normales al detener la voz.
+        if (
+            evento.error !== "canceled" &&
+            evento.error !== "interrupted"
+        ) {
+            console.error("Error de lectura:", evento.error);
+        }
+
+        finalizarLectura(voz);
     };
 
-    window.speechSynthesis.speak(voz);
+    try {
+        window.speechSynthesis.speak(voz);
+    } catch (error) {
+        console.error("No se pudo iniciar la lectura:", error);
+        finalizarLectura(voz);
+    }
+}
+
+function finalizarLectura(voz) {
+    // Evita que una lectura antigua cambie el estado de una nueva.
+    if (voz && lecturaActual !== voz) return;
+
+    lecturaActual = null;
+    leyendoRespuesta = false;
+    actualizarBotonLectura(false);
 }
 
 function detenerLectura() {
+    leyendoRespuesta = false;
+
     if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
     }
 
-    leyendoRespuesta = false;
+    lecturaActual = null;
+    actualizarBotonLectura(false);
 }
 
-/* =========================================
-   COMPARTIR CONVERSACIÓN
-========================================= */
+/* =====================================================
+   COMPARTIR CONVERSACIONES
+===================================================== */
 
 async function compartirConversacion() {
     const chat = obtenerChatActual();
@@ -736,35 +921,46 @@ async function compartirConversacion() {
 
     const contenido = chat.mensajes
         .map(mensaje => {
-            const autor = mensaje.rol === "usuario" ? "Tú" : "IA TODO";
+            const autor = mensaje.rol === "usuario"
+                ? "Tú"
+                : "IA TODO";
+
             return `${autor}:\n${mensaje.texto}`;
         })
         .join("\n\n");
 
-    const datosCompartir = {
-        title: chat.titulo || "Conversación con IA TODO",
-        text: contenido
-    };
-
     try {
         if (navigator.share) {
-            await navigator.share(datosCompartir);
-        } else if (navigator.clipboard && window.isSecureContext) {
+            await navigator.share({
+                title: chat.titulo || "Conversación con IA TODO",
+                text: contenido
+            });
+            return;
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
             await navigator.clipboard.writeText(contenido);
             alert("La conversación se copió al portapapeles.");
-        } else {
-            const area = document.createElement("textarea");
-            area.value = contenido;
-            document.body.appendChild(area);
-            area.select();
-
-            const copiado = document.execCommand("copy");
-            area.remove();
-
-            alert(copiado
-                ? "La conversación se copió al portapapeles."
-                : "No se pudo copiar la conversación.");
+            return;
         }
+
+        const area = document.createElement("textarea");
+        area.value = contenido;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+
+        document.body.appendChild(area);
+        area.select();
+
+        const copiado = document.execCommand("copy");
+        area.remove();
+
+        alert(
+            copiado
+                ? "La conversación se copió al portapapeles."
+                : "No se pudo copiar la conversación."
+        );
     } catch (error) {
         if (error.name !== "AbortError") {
             console.error("Error al compartir:", error);
@@ -773,45 +969,52 @@ async function compartirConversacion() {
     }
 }
 
-/* =========================================
-   ALTURA DEL CUADRO DE TEXTO
-========================================= */
+/* =====================================================
+   CUADRO DE TEXTO
+===================================================== */
 
 function ajustarAlturaTexto() {
     if (!elementos.mensaje) return;
 
     elementos.mensaje.style.height = "auto";
+
     elementos.mensaje.style.height =
-        Math.min(elementos.mensaje.scrollHeight, 180) + "px";
+        Math.min(
+            elementos.mensaje.scrollHeight,
+            CONFIG.maxAlturaTexto
+        ) + "px";
 }
 
-/* =========================================
+/* =====================================================
    EVENTOS DE LA INTERFAZ
-========================================= */
+===================================================== */
 
 function conectarEventos() {
-    if (elementos.enviarBtn) {
-        elementos.enviarBtn.addEventListener("click", enviarMensaje);
-    }
+    elementos.enviarBtn?.addEventListener(
+        "click",
+        enviarMensaje
+    );
 
-    if (elementos.mensaje) {
-        elementos.mensaje.addEventListener("keydown", evento => {
-            if (
-                evento.key === "Enter" &&
-                !evento.shiftKey &&
-                !evento.isComposing
-            ) {
-                evento.preventDefault();
-                enviarMensaje();
-            }
-        });
+    elementos.mensaje?.addEventListener("keydown", evento => {
+        if (
+            evento.key === "Enter" &&
+            !evento.shiftKey &&
+            !evento.isComposing
+        ) {
+            evento.preventDefault();
+            enviarMensaje();
+        }
+    });
 
-        elementos.mensaje.addEventListener("input", ajustarAlturaTexto);
-    }
+    elementos.mensaje?.addEventListener(
+        "input",
+        ajustarAlturaTexto
+    );
 
-    if (elementos.nuevoChatBtn) {
-        elementos.nuevoChatBtn.addEventListener("click", nuevaConversacion);
-    }
+    elementos.nuevoChatBtn?.addEventListener(
+        "click",
+        nuevaConversacion
+    );
 
     if (elementos.fotoBtn && elementos.archivoInput) {
         elementos.fotoBtn.addEventListener("click", () => {
@@ -827,55 +1030,55 @@ function conectarEventos() {
         });
     }
 
-    if (elementos.archivoInput) {
-        elementos.archivoInput.addEventListener("change", evento => {
-            const archivo = evento.target.files?.[0];
+    elementos.archivoInput?.addEventListener("change", evento => {
+        const archivo = evento.target.files?.[0];
 
-            if (archivo) {
-                procesarArchivo(archivo);
-            }
-        });
-    }
+        if (archivo) {
+            procesarArchivo(archivo);
+        }
+    });
 
-    if (elementos.quitarArchivoBtn) {
-        elementos.quitarArchivoBtn.addEventListener("click", limpiarAdjunto);
-    }
+    elementos.quitarArchivoBtn?.addEventListener(
+        "click",
+        limpiarAdjunto
+    );
 
-    if (elementos.dictadoBtn) {
-        elementos.dictadoBtn.addEventListener("click", iniciarDictado);
-    }
+    elementos.dictadoBtn?.addEventListener(
+        "click",
+        iniciarDictado
+    );
 
-    if (elementos.leerBtn) {
-        elementos.leerBtn.addEventListener("click", leerUltimaRespuesta);
-    }
+    elementos.leerBtn?.addEventListener(
+        "click",
+        leerUltimaRespuesta
+    );
 
-    if (elementos.compartirBtn) {
-        elementos.compartirBtn.addEventListener("click", compartirConversacion);
-    }
+    elementos.compartirBtn?.addEventListener(
+        "click",
+        compartirConversacion
+    );
 
-    // Las tarjetas usan las clases y el atributo data-pregunta del HTML.
-    if (elementos.mensajes) {
-        elementos.mensajes.addEventListener("click", evento => {
-            const tarjeta = evento.target.closest("[data-pregunta]");
+    elementos.mensajes?.addEventListener("click", evento => {
+        const tarjeta = evento.target.closest("[data-pregunta]");
 
-            if (!tarjeta) return;
+        if (!tarjeta) return;
 
-            const pregunta = tarjeta.getAttribute("data-pregunta");
+        const pregunta = tarjeta.getAttribute("data-pregunta");
 
-            if (pregunta && elementos.mensaje) {
-                elementos.mensaje.value = pregunta;
-                ajustarAlturaTexto();
-                elementos.mensaje.focus();
-            }
-        });
-    }
+        if (pregunta && elementos.mensaje) {
+            elementos.mensaje.value = pregunta;
+            ajustarAlturaTexto();
+            elementos.mensaje.focus();
+        }
+    });
 
-    // Importante: el botón del menú lo controla el script inline del HTML.
-    // No se agrega otro listener para evitar que la barra se abra y se cierre sola.
+    // El HTML conserva el control principal del menú lateral.
+    // Evita registrar un segundo evento que abra y cierre el menú.
 
     document.addEventListener("keydown", evento => {
         if (evento.key === "Escape") {
             cerrarSidebarEnMovil();
+            detenerLectura();
         }
     });
 
@@ -884,11 +1087,16 @@ function conectarEventos() {
             cerrarSidebarEnMovil();
         }
     });
+
+    window.addEventListener("beforeunload", () => {
+        detenerLectura();
+        detenerDictado();
+    });
 }
 
-/* =========================================
-   INICIO DE IA TODO
-========================================= */
+/* =====================================================
+   INICIALIZACIÓN
+===================================================== */
 
 function iniciarIA() {
     cargarChats();
@@ -904,10 +1112,16 @@ function iniciarIA() {
     }
 
     ajustarAlturaTexto();
+    actualizarBotonLectura(false);
+    actualizarBotonDictado(false);
 }
 
 if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", iniciarIA);
+    document.addEventListener(
+        "DOMContentLoaded",
+        iniciarIA,
+        { once: true }
+    );
 } else {
     iniciarIA();
 }
