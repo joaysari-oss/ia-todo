@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -345,6 +344,7 @@
       display: flex;
       align-items: flex-start;
       gap: 13px;
+      width: 100%;
       margin: 22px 0;
       line-height: 1.75;
     }
@@ -365,23 +365,38 @@
 
     .mensaje.usuario .avatar {
       background: linear-gradient(135deg, #347bdc, #5162b6);
+      order: 2;
     }
 
+    /* Tarjetas para los mensajes del chat. */
     .contenido {
       min-width: 0;
+      max-width: min(100%, 760px);
       overflow-wrap: anywhere;
       white-space: pre-wrap;
-      padding: 11px 15px;
-      border: 1px solid #39355e;
-      border-radius: 4px 16px 16px 16px;
-      background: #242143bb;
-      color: #f0eeff;
+      padding: 16px 18px;
+      border: 1px solid #514879;
+      border-radius: 6px 20px 20px 20px;
+      background: linear-gradient(145deg, #29264b, #22203f);
+      color: #f5f3ff;
+      box-shadow: 0 8px 24px #08071c33, inset 0 1px #ffffff08;
+      line-height: 1.8;
+    }
+
+    .mensaje:not(.usuario) .contenido {
+      border-left: 3px solid #9878ff;
+    }
+
+    .mensaje.usuario {
+      justify-content: flex-end;
     }
 
     .mensaje.usuario .contenido {
-      background: linear-gradient(135deg, #34295f, #243a66);
-      border-color: #514783;
-      border-radius: 4px 16px 16px 16px;
+      margin-left: auto;
+      background: linear-gradient(135deg, #40316f, #263f70);
+      border-color: #7160ad;
+      border-radius: 20px 6px 20px 20px;
+      box-shadow: 0 7px 20px #08071c35, inset 0 1px #ffffff0b;
     }
 
     .contenido img {
@@ -543,6 +558,16 @@
         padding: 7px 9px;
         font-size: 10px;
       }
+
+      .contenido {
+        padding: 13px 14px;
+        max-width: 100%;
+        font-size: 14px;
+      }
+
+      .mensaje {
+        gap: 9px;
+      }
     }
   </style>
 </head>
@@ -572,18 +597,19 @@
     <header>
       <div class="encabezado-izquierdo">
         <button
-          class="acciones"
           id="menuBtn"
           type="button"
           aria-label="Abrir menú"
           aria-controls="sidebar"
           aria-expanded="false"
         >☰</button>
+
         <div>
           <strong>Asistente inteligente</strong>
           <div class="subtitulo">Un mundo de posibilidades</div>
         </div>
       </div>
+
       <span class="estado" id="estado">● Lista para ayudarte</span>
     </header>
 
@@ -591,6 +617,7 @@
       <div class="bienvenida" id="bienvenida">
         <div class="bienvenida-icono">✦</div>
         <h2>Hola, bienvenido a <span>IA TODO</span></h2>
+
         <p>
           Tu espacio para aprender, crear, investigar y resolver tus dudas.
           ¿Qué vamos a descubrir hoy?
@@ -646,6 +673,7 @@
         </div>
 
         <input id="imagenInput" type="file" accept="image/*" hidden>
+
         <input
           id="archivoInput"
           type="file"
@@ -681,6 +709,7 @@
 
     function alternarMenu() {
       const abierta = sidebar.classList.toggle("abierta");
+
       menuBtn.setAttribute("aria-expanded", String(abierta));
       menuBtn.setAttribute(
         "aria-label",
