@@ -122,7 +122,7 @@ function mostrarBienvenida() {
 
     elementos.mensajes.innerHTML = `
         <div class="bienvenida">
-            <div class="bienvenida-icono">🤖</div>
+            <div class="bienvenida-icono">✦</div>
 
             <h2>¡Hola! Soy IA TODO</h2>
 
