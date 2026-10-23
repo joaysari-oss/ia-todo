@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -21,9 +22,7 @@
       --degradado: linear-gradient(135deg, #9a5cff, #5578ff);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -38,9 +37,7 @@
         var(--fondo);
     }
 
-    button, textarea {
-      font: inherit;
-    }
+    button, textarea { font: inherit; }
 
     button {
       cursor: pointer;
@@ -52,10 +49,7 @@
       outline-offset: 3px;
     }
 
-    button:disabled {
-      opacity: .65;
-      cursor: wait;
-    }
+    button:disabled { opacity: .65; cursor: wait; }
 
     .sidebar {
       width: 270px;
@@ -94,9 +88,7 @@
       letter-spacing: -.8px;
     }
 
-    .marca h1 span {
-      color: #a993ff;
-    }
+    .marca h1 span { color: #a993ff; }
 
     .marca small {
       display: block;
@@ -173,9 +165,7 @@
       padding: 8px !important;
     }
 
-    .eliminar:hover {
-      background: #5b294b !important;
-    }
+    .eliminar:hover { background: #5b294b !important; }
 
     .pie-sidebar {
       margin-top: auto;
@@ -222,9 +212,7 @@
       gap: 13px;
     }
 
-    .encabezado-izquierdo strong {
-      font-size: 16px;
-    }
+    .encabezado-izquierdo strong { font-size: 16px; }
 
     .subtitulo {
       color: var(--suave);
@@ -386,9 +374,7 @@
       border-left: 3px solid #9878ff;
     }
 
-    .mensaje.usuario {
-      justify-content: flex-end;
-    }
+    .mensaje.usuario { justify-content: flex-end; }
 
     .mensaje.usuario .contenido {
       margin-left: auto;
@@ -435,9 +421,7 @@
       line-height: 1.8;
     }
 
-    #mensajes .mensaje-usuario {
-      align-items: flex-end;
-    }
+    #mensajes .mensaje-usuario { align-items: flex-end; }
 
     #mensajes .mensaje-usuario .etiqueta-mensaje {
       color: #9ec7ff;
@@ -501,9 +485,16 @@
       font-size: 14px;
     }
 
-    #mensaje::placeholder {
-      color: #aaa5cf;
+    #mensaje::placeholder { color: #aaa5cf; }
+
+    #estadoCreador {
+      margin: 0 0 8px 9px;
+      color: #ffe58a;
+      font-size: 12px;
+      font-weight: 700;
     }
+
+    #estadoCreador[hidden] { display: none; }
 
     #archivoNombre {
       color: #c3b7ff;
@@ -553,9 +544,7 @@
       font-size: 10px;
     }
 
-    #menuBtn {
-      display: none;
-    }
+    #menuBtn { display: none; }
 
     @media (max-width: 760px) {
       .sidebar {
@@ -582,47 +571,21 @@
         min-height: 40px;
       }
 
-      header {
-        padding: 12px 14px;
-      }
-
-      #mensajes {
-        padding: 18px 13px;
-      }
-
-      .zona-escritura {
-        padding: 10px;
-      }
-
-      .sugerencias {
-        grid-template-columns: 1fr;
-      }
-
-      .bienvenida {
-        margin-top: 5vh;
-      }
-
-      .bienvenida h2 {
-        font-size: 29px;
-      }
-
-      .acciones {
-        gap: 6px;
-      }
+      header { padding: 12px 14px; }
+      #mensajes { padding: 18px 13px; }
+      .zona-escritura { padding: 10px; }
+      .sugerencias { grid-template-columns: 1fr; }
+      .bienvenida { margin-top: 5vh; }
+      .bienvenida h2 { font-size: 29px; }
+      .acciones { gap: 6px; }
 
       .acciones button {
         padding: 9px;
         font-size: 11px;
       }
 
-      .acciones .enviar {
-        min-width: 88px;
-      }
-
-      .estado {
-        padding: 7px 9px;
-        font-size: 10px;
-      }
+      .acciones .enviar { min-width: 88px; }
+      .estado { padding: 7px 9px; font-size: 10px; }
 
       .contenido {
         padding: 13px 14px;
@@ -630,9 +593,7 @@
         font-size: 14px;
       }
 
-      .mensaje {
-        gap: 9px;
-      }
+      .mensaje { gap: 9px; }
 
       #mensajes .contenido-mensaje {
         max-width: 100%;
@@ -688,7 +649,6 @@
       <div class="bienvenida" id="bienvenida">
         <div class="bienvenida-icono">✦</div>
         <h2>Hola, bienvenido a <span>IA TODO</span></h2>
-
         <p>
           Tu espacio para aprender, crear, investigar y resolver tus dudas.
           ¿Qué vamos a descubrir hoy?
@@ -724,6 +684,8 @@
 
     <section class="zona-escritura">
       <div class="compositor">
+        <div id="estadoCreador" hidden>✦ Código creador verificado</div>
+
         <textarea
           id="mensaje"
           placeholder="Escribe aquí lo que quieras preguntarme..."
@@ -731,7 +693,7 @@
           aria-label="Escribe tu mensaje"
         ></textarea>
 
-        <div id="archivoNombre" hidden></div>
+        <div id="archivoNombre"></div>
 
         <div class="acciones">
           <button id="fotoBtn" type="button">🖼 Galería</button>
@@ -740,7 +702,7 @@
           <button id="dictarBtn" type="button">🎙 Dictar</button>
           <button id="leerBtn" type="button">🔊 Leer</button>
           <button id="compartirBtn" type="button">↗ Compartir</button>
-          <button id="borrarAdjuntoBtn" type="button" hidden>✕ Quitar archivo</button>
+          <button id="borrarAdjuntoBtn" type="button">✕ Quitar archivo</button>
           <button class="enviar" id="enviarBtn" type="button">Enviar ↑</button>
         </div>
 
@@ -775,14 +737,12 @@
 
     function cerrarMenu() {
       sidebar.classList.remove("abierta");
-      sidebar.classList.remove("abierto");
       menuBtn.setAttribute("aria-expanded", "false");
       menuBtn.setAttribute("aria-label", "Abrir menú");
     }
 
     function alternarMenu() {
       const abierta = sidebar.classList.toggle("abierta");
-
       menuBtn.setAttribute("aria-expanded", String(abierta));
       menuBtn.setAttribute(
         "aria-label",
@@ -807,9 +767,7 @@
     });
 
     document.addEventListener("keydown", (evento) => {
-      if (evento.key === "Escape") {
-        cerrarMenu();
-      }
+      if (evento.key === "Escape") cerrarMenu();
     });
 
     window.addEventListener("resize", () => {
