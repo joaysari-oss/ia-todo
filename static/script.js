@@ -23,18 +23,21 @@ const elementos = {
     mensajes: document.getElementById("mensajes"),
     mensaje: document.getElementById("mensaje"),
     enviarBtn: document.getElementById("enviarBtn"),
-    nuevoChatBtn: document.getElementById("nuevoChat") || document.getElementById("nuevoChatBtn"),
+    nuevoChatBtn: document.getElementById("nuevoChatBtn")
+        || document.getElementById("nuevoChat"),
     archivoInput: document.getElementById("archivoInput"),
-    fotoBtn: document.getElementById("fotoBtn"),
-    camaraBtn: document.getElementById("camaraBtn"),
     imagenInput: document.getElementById("imagenInput"),
-    camaraInput: document.getElementById("camaraInput"),
+    fotoBtn: document.getElementById("fotoBtn"),
     archivoBtn: document.getElementById("archivoBtn"),
-    dictadoBtn: document.getElementById("dictarBtn") || document.getElementById("dictadoBtn"),
+    dictadoBtn: document.getElementById("dictarBtn")
+        || document.getElementById("dictadoBtn"),
     leerBtn: document.getElementById("leerBtn"),
     compartirBtn: document.getElementById("compartirBtn"),
-    quitarArchivoBtn: document.getElementById("borrarAdjuntoBtn") || document.getElementById("quitarArchivoBtn"),
-    nombreArchivo: document.getElementById("archivoNombre") || document.getElementById("nombreArchivo")
+    quitarArchivoBtn: document.getElementById("borrarAdjuntoBtn")
+        || document.getElementById("quitarArchivoBtn"),
+    nombreArchivo: document.getElementById("archivoNombre")
+        || document.getElementById("nombreArchivo"),
+    estadoCreador: document.getElementById("estadoCreador")
 };
 
 let chats = [];
@@ -52,10 +55,8 @@ let solicitudActual = 0;
 ===================================================== */
 
 function generarId() {
-    return (
-        Date.now().toString(36) +
-        Math.random().toString(36).slice(2, 10)
-    );
+    return Date.now().toString(36) +
+        Math.random().toString(36).slice(2, 10);
 }
 
 function obtenerChatActual() {
@@ -64,10 +65,7 @@ function obtenerChatActual() {
 
 function guardarChats() {
     try {
-        localStorage.setItem(
-            CONFIG.claveHistorial,
-            JSON.stringify(chats)
-        );
+        localStorage.setItem(CONFIG.claveHistorial, JSON.stringify(chats));
     } catch (error) {
         console.error("Error al guardar las conversaciones:", error);
     }
@@ -108,17 +106,7 @@ function crearChatInterno() {
     chats.unshift(chat);
     chatActualId = chat.id;
     guardarChats();
-
     return chat;
-}
-
-function escaparHTML(texto) {
-    return String(texto ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 }
 
 function cerrarSidebarEnMovil() {
@@ -126,26 +114,66 @@ function cerrarSidebarEnMovil() {
 
     elementos.sidebar.classList.remove("abierta");
     elementos.sidebar.classList.remove("abierto");
+
+    elementos.menuBtn?.setAttribute("aria-expanded", "false");
 }
 
 function desplazarAlFinal() {
     if (!elementos.mensajes) return;
-
-    elementos.mensajes.scrollTop =
-        elementos.mensajes.scrollHeight;
+    elementos.mensajes.scrollTop = elementos.mensajes.scrollHeight;
 }
 
 function obtenerUltimaRespuesta(chat = obtenerChatActual()) {
     if (!chat || !Array.isArray(chat.mensajes)) return null;
 
-    return [...chat.mensajes]
-        .reverse()
-        .find(mensaje =>
-            mensaje &&
-            mensaje.rol === "asistente" &&
-            typeof mensaje.texto === "string" &&
-            mensaje.texto.trim()
-        ) || null;
+    return [...chat.mensajes].reverse().find(mensaje =>
+        mensaje &&
+        mensaje.rol === "asistente" &&
+        typeof mensaje.texto === "string" &&
+        mensaje.texto.trim()
+    ) || null;
+}
+
+/* =====================================================
+   ESTADO DEL CREADOR
+===================================================== */
+
+function creadorEstaVerificado() {
+    try {
+        return localStorage.getItem("iatodo_creador_verificado") === "true";
+    } catch {
+        return false;
+    }
+}
+
+function mostrarEstadoCreador(verificado) {
+    if (elementos.estadoCreador) {
+        elementos.estadoCreador.hidden = !verificado;
+        elementos.estadoCreador.textContent = verificado
+            ? "⭐ Código creador verificado"
+            : "";
+    }
+
+    if (elementos.mensaje) {
+        elementos.mensaje.placeholder = verificado
+            ? "¿Qué te puedo ayudar, creador?"
+            : "Escribe aquí lo que quieras preguntarme...";
+    }
+}
+
+function verificarCodigoCreador(codigo) {
+    if (String(codigo || "").trim() !== CONFIG.codigoCreador) {
+        return false;
+    }
+
+    try {
+        localStorage.setItem("iatodo_creador_verificado", "true");
+    } catch (error) {
+        console.warn("No se pudo guardar la verificación:", error);
+    }
+
+    mostrarEstadoCreador(true);
+    return true;
 }
 
 /* =====================================================
@@ -217,22 +245,11 @@ function mostrarBienvenida() {
         const descripcionTarjeta = document.createElement("small");
         descripcionTarjeta.textContent = opcion.descripcion;
 
-        tarjeta.append(
-            iconoTarjeta,
-            tituloTarjeta,
-            descripcionTarjeta
-        );
-
+        tarjeta.append(iconoTarjeta, tituloTarjeta, descripcionTarjeta);
         sugerencias.appendChild(tarjeta);
     });
 
-    bienvenida.append(
-        icono,
-        titulo,
-        descripcion,
-        sugerencias
-    );
-
+    bienvenida.append(icono, titulo, descripcion, sugerencias);
     elementos.mensajes.appendChild(bienvenida);
 }
 
@@ -262,7 +279,6 @@ function agregarMensajeVisual(rol, texto, opciones = {}) {
 
     if (opciones.imagen) {
         const imagen = document.createElement("img");
-
         imagen.src = opciones.imagen;
         imagen.alt = "Imagen adjunta";
         imagen.className = "imagen-mensaje";
@@ -271,24 +287,20 @@ function agregarMensajeVisual(rol, texto, opciones = {}) {
         imagen.style.objectFit = "contain";
         imagen.style.borderRadius = "12px";
         imagen.style.marginTop = "10px";
-
         contenido.appendChild(document.createElement("br"));
         contenido.appendChild(imagen);
     }
 
     elementos.mensajes.appendChild(contenedor);
     desplazarAlFinal();
-
     return contenedor;
 }
 
 function mostrarIndicadorEspera() {
     quitarIndicadorEspera();
-
     if (!elementos.mensajes) return;
 
     const indicador = document.createElement("div");
-
     indicador.className = "indicador-espera";
     indicador.id = "indicadorEspera";
     indicador.textContent = "IA TODO está pensando…";
@@ -304,7 +316,7 @@ function quitarIndicadorEspera() {
 }
 
 /* =====================================================
-   HISTORIAL
+   HISTORIAL DE CONVERSACIONES
 ===================================================== */
 
 function actualizarInterfazHistorial() {
@@ -316,7 +328,6 @@ function actualizarInterfazHistorial() {
         const vacio = document.createElement("div");
         vacio.className = "historial-vacio";
         vacio.textContent = "Todavía no tienes conversaciones.";
-
         elementos.listaChats.appendChild(vacio);
         return;
     }
@@ -325,16 +336,13 @@ function actualizarInterfazHistorial() {
         const fila = document.createElement("div");
         fila.className = "chat-item";
 
-        if (chat.id === chatActualId) {
-            fila.classList.add("activo");
-        }
+        if (chat.id === chatActualId) fila.classList.add("activo");
 
         const abrir = document.createElement("button");
         abrir.type = "button";
         abrir.className = "abrir-chat";
         abrir.textContent = chat.titulo || "Nueva conversación";
         abrir.title = chat.titulo || "Nueva conversación";
-
         abrir.addEventListener("click", () => abrirChat(chat.id));
 
         const borrar = document.createElement("button");
@@ -357,9 +365,7 @@ function actualizarInterfazHistorial() {
 function actualizarTituloChat(chat) {
     if (!chat) return;
 
-    const primero = chat.mensajes.find(
-        mensaje => mensaje.rol === "usuario"
-    );
+    const primero = chat.mensajes.find(mensaje => mensaje.rol === "usuario");
 
     if (!primero || !primero.texto) {
         chat.titulo = "Nueva conversación";
@@ -367,7 +373,6 @@ function actualizarTituloChat(chat) {
     }
 
     const titulo = primero.texto.trim();
-
     chat.titulo = titulo.length > CONFIG.maxTituloChat
         ? titulo.slice(0, CONFIG.maxTituloChat) + "…"
         : titulo;
@@ -376,7 +381,6 @@ function actualizarTituloChat(chat) {
 function nuevaConversacion() {
     detenerLectura();
     detenerDictado();
-
     crearChatInterno();
     actualizarInterfazHistorial();
     mostrarBienvenida();
@@ -392,14 +396,11 @@ function nuevaConversacion() {
 
 function abrirChat(id) {
     const chat = chats.find(item => item.id === id);
-
     if (!chat) return;
 
     detenerLectura();
     detenerDictado();
-
     chatActualId = id;
-
     actualizarInterfazHistorial();
     renderizarChat(chat);
     cerrarSidebarEnMovil();
@@ -432,9 +433,7 @@ function eliminarChat(id) {
         return;
     }
 
-    if (id === chatActualId) {
-        detenerLectura();
-    }
+    if (id === chatActualId) detenerLectura();
 
     chats = chats.filter(chat => chat.id !== id);
 
@@ -450,10 +449,8 @@ function eliminarChat(id) {
 
     guardarChats();
     actualizarInterfazHistorial();
-}
-
-/* =====================================================
-   IDENTIDAD DEL CREADOR
+}/* =====================================================
+   IDENTIDAD Y RESPUESTA DEL CREADOR
 ===================================================== */
 
 function esPreguntaSobreCreador(texto) {
@@ -472,15 +469,14 @@ function esPreguntaSobreCreador(texto) {
         /quien creo ia todo/,
         /quien hizo ia todo/,
         /quien es el creador/,
-        /quien te invento/,
-        /quien creo esta inteligencia artificial/
+        /por quien fuiste creado/
     ];
 
     return patrones.some(patron => patron.test(pregunta));
 }
 
 function respuestaCreador() {
-    return "IA TODO fue creada por Dudao, un niño. No puede dar más información sobre su creador";
+    return `IA TODO fue creada por Joao, un niño. No puede dar más información sobre su creador`;
 }
 
 /* =====================================================
@@ -495,8 +491,40 @@ async function enviarMensaje() {
     if (!texto && !imagenAdjunta && !archivoAdjunto) return;
 
     const chat = obtenerChatActual();
-
     if (!chat) return;
+
+    // El código de creador se verifica antes de enviar al servidor.
+    if (verificarCodigoCreador(texto)) {
+        elementos.mensaje.value = "";
+        ajustarAlturaTexto();
+
+        chat.mensajes.push({
+            rol: "usuario",
+            texto: "••••••••••••••••",
+            fecha: Date.now()
+        });
+
+        chat.mensajes.push({
+            rol: "asistente",
+            texto: "⭐ Código creador verificado",
+            fecha: Date.now()
+        });
+
+        chat.mensajes.push({
+            rol: "asistente",
+            texto: "¿Qué te puedo ayudar, creador?",
+            fecha: Date.now()
+        });
+
+        agregarMensajeVisual("usuario", "Código de creador ingresado.");
+        agregarMensajeVisual("asistente", "⭐ Código creador verificado");
+        agregarMensajeVisual("asistente", "¿Qué te puedo ayudar, creador?");
+
+        guardarChats();
+        actualizarInterfazHistorial();
+        limpiarAdjunto();
+        return;
+    }
 
     const solicitud = ++solicitudActual;
     const imagen = imagenAdjunta;
@@ -513,7 +541,6 @@ async function enviarMensaje() {
     });
 
     actualizarTituloChat(chat);
-
     agregarMensajeVisual("usuario", textoVisible, { imagen });
 
     elementos.mensaje.value = "";
@@ -546,9 +573,7 @@ async function enviarMensaje() {
                 imagen: imagen || null
             };
 
-            if (archivo) {
-                cuerpo.archivo = archivo;
-            }
+            if (archivo) cuerpo.archivo = archivo;
 
             const resultado = await fetch(CONFIG.endpointChat, {
                 method: "POST",
@@ -583,7 +608,9 @@ async function enviarMensaje() {
                 datos.mensaje;
 
             if (typeof respuesta !== "string" || !respuesta.trim()) {
-                throw new Error("El servidor no devolvió una respuesta válida.");
+                throw new Error(
+                    "El servidor no devolvió una respuesta válida."
+                );
             }
         }
 
@@ -653,10 +680,7 @@ function procesarArchivo(archivo) {
             mostrarNombreAdjunto(archivo.name);
         };
 
-        lector.onerror = () => {
-            alert("No se pudo leer la imagen.");
-        };
-
+        lector.onerror = () => alert("No se pudo leer la imagen.");
         lector.readAsDataURL(archivo);
         return;
     }
@@ -675,10 +699,7 @@ function procesarArchivo(archivo) {
         mostrarNombreAdjunto(archivo.name);
     };
 
-    lector.onerror = () => {
-        alert("No se pudo leer el archivo.");
-    };
-
+    lector.onerror = () => alert("No se pudo leer el archivo.");
     lector.readAsText(archivo);
 }
 
@@ -697,17 +718,8 @@ function limpiarAdjunto() {
     imagenAdjunta = null;
     archivoAdjunto = null;
 
-    if (elementos.archivoInput) {
-        elementos.archivoInput.value = "";
-    }
-
-    if (elementos.imagenInput) {
-        elementos.imagenInput.value = "";
-    }
-
-    if (elementos.camaraInput) {
-        elementos.camaraInput.value = "";
-    }
+    if (elementos.archivoInput) elementos.archivoInput.value = "";
+    if (elementos.imagenInput) elementos.imagenInput.value = "";
 
     if (elementos.nombreArchivo) {
         elementos.nombreArchivo.textContent = "";
@@ -756,16 +768,11 @@ function iniciarDictado() {
             ).trim();
 
             ajustarAlturaTexto();
-            elementos.mensaje.focus();
         }
     };
 
     reconocimientoVoz.onerror = evento => {
         console.error("Error de dictado:", evento.error);
-
-        if (evento.error === "not-allowed") {
-            alert("Permite el acceso al micrófono en tu navegador para usar el dictado.");
-        }
     };
 
     reconocimientoVoz.onend = () => {
@@ -789,6 +796,7 @@ function actualizarBotonDictado(activo) {
         "aria-pressed",
         activo ? "true" : "false"
     );
+
     elementos.dictadoBtn.title = activo
         ? "Detener dictado"
         : "Dictar por voz";
@@ -807,11 +815,8 @@ function detenerDictado() {
     }
 
     actualizarBotonDictado(false);
-}
-
-/* =====================================================
+}/* =====================================================
    LECTURA EN VOZ ALTA
-   El botón funciona como interruptor: leer / detener.
 ===================================================== */
 
 function actualizarBotonLectura(activo) {
@@ -822,6 +827,7 @@ function actualizarBotonLectura(activo) {
         "aria-pressed",
         activo ? "true" : "false"
     );
+
     elementos.leerBtn.title = activo
         ? "Detener lectura"
         : "Leer respuesta";
@@ -851,14 +857,9 @@ function leerUltimaRespuesta() {
 
     detenerLectura();
 
-    const texto = ultimaRespuesta.texto.trim();
-
-    if (!texto) {
-        alert("La respuesta no contiene texto para leer.");
-        return;
-    }
-
-    const voz = new SpeechSynthesisUtterance(texto);
+    const voz = new SpeechSynthesisUtterance(
+        ultimaRespuesta.texto.trim()
+    );
 
     voz.lang = CONFIG.idioma;
     voz.rate = 1;
@@ -874,9 +875,7 @@ function leerUltimaRespuesta() {
         actualizarBotonLectura(true);
     };
 
-    voz.onend = () => {
-        finalizarLectura(voz);
-    };
+    voz.onend = () => finalizarLectura(voz);
 
     voz.onerror = evento => {
         if (
@@ -986,7 +985,6 @@ function ajustarAlturaTexto() {
     if (!elementos.mensaje) return;
 
     elementos.mensaje.style.height = "auto";
-
     elementos.mensaje.style.height =
         Math.min(
             elementos.mensaje.scrollHeight,
@@ -999,10 +997,7 @@ function ajustarAlturaTexto() {
 ===================================================== */
 
 function conectarEventos() {
-    elementos.enviarBtn?.addEventListener(
-        "click",
-        enviarMensaje
-    );
+    elementos.enviarBtn?.addEventListener("click", enviarMensaje);
 
     elementos.mensaje?.addEventListener("keydown", evento => {
         if (
@@ -1025,51 +1020,32 @@ function conectarEventos() {
         nuevaConversacion
     );
 
-    // Galería: seleccionar una foto guardada.
     elementos.fotoBtn?.addEventListener("click", () => {
-        elementos.imagenInput?.click();
+        if (elementos.imagenInput) {
+            elementos.imagenInput.accept = "image/*";
+            elementos.imagenInput.click();
+        } else if (elementos.archivoInput) {
+            elementos.archivoInput.accept = "image/*";
+            elementos.archivoInput.click();
+        }
     });
 
-    // Cámara: tomar una fotografía desde un dispositivo compatible.
-    elementos.camaraBtn?.addEventListener("click", () => {
-        elementos.camaraInput?.click();
+    elementos.archivoBtn?.addEventListener("click", () => {
+        if (elementos.archivoInput) {
+            elementos.archivoInput.accept =
+                ".txt,.md,.csv,.json,.py,.html,.css,.js,.xml,.log";
+            elementos.archivoInput.click();
+        }
     });
 
     elementos.imagenInput?.addEventListener("change", evento => {
         const archivo = evento.target.files?.[0];
-
-        if (archivo) {
-            procesarArchivo(archivo);
-        }
-
-        evento.target.value = "";
+        if (archivo) procesarArchivo(archivo);
     });
-
-    elementos.camaraInput?.addEventListener("change", evento => {
-        const archivo = evento.target.files?.[0];
-
-        if (archivo) {
-            procesarArchivo(archivo);
-        }
-
-        evento.target.value = "";
-    });
-
-    if (elementos.archivoBtn && elementos.archivoInput) {
-        elementos.archivoBtn.addEventListener("click", () => {
-            elementos.archivoInput.accept =
-                ".txt,.md,.csv,.json,.py,.html,.css,.js,.pdf,.doc,.docx,.xlsx";
-
-            elementos.archivoInput.click();
-        });
-    }
 
     elementos.archivoInput?.addEventListener("change", evento => {
         const archivo = evento.target.files?.[0];
-
-        if (archivo) {
-            procesarArchivo(archivo);
-        }
+        if (archivo) procesarArchivo(archivo);
     });
 
     elementos.quitarArchivoBtn?.addEventListener(
@@ -1094,7 +1070,6 @@ function conectarEventos() {
 
     elementos.mensajes?.addEventListener("click", evento => {
         const tarjeta = evento.target.closest("[data-pregunta]");
-
         if (!tarjeta) return;
 
         const pregunta = tarjeta.getAttribute("data-pregunta");
@@ -1103,6 +1078,42 @@ function conectarEventos() {
             elementos.mensaje.value = pregunta;
             ajustarAlturaTexto();
             elementos.mensaje.focus();
+        }
+    });
+
+    elementos.menuBtn?.addEventListener("click", evento => {
+        evento.stopPropagation();
+
+        if (!elementos.sidebar) return;
+
+        const abierta =
+            elementos.sidebar.classList.contains("abierta") ||
+            elementos.sidebar.classList.contains("abierto");
+
+        elementos.sidebar.classList.toggle("abierta", !abierta);
+        elementos.sidebar.classList.toggle("abierto", !abierta);
+
+        elementos.menuBtn.setAttribute(
+            "aria-expanded",
+            String(!abierta)
+        );
+
+        elementos.menuBtn.setAttribute(
+            "aria-label",
+            abierta ? "Abrir menú" : "Cerrar menú"
+        );
+    });
+
+    document.addEventListener("click", evento => {
+        if (
+            window.innerWidth <= 760 &&
+            elementos.sidebar &&
+            elementos.menuBtn &&
+            elementos.sidebar.classList.contains("abierta") &&
+            !elementos.sidebar.contains(evento.target) &&
+            !elementos.menuBtn.contains(evento.target)
+        ) {
+            cerrarSidebarEnMovil();
         }
     });
 
@@ -1133,6 +1144,8 @@ function iniciarIA() {
     cargarChats();
     conectarEventos();
     actualizarInterfazHistorial();
+
+    mostrarEstadoCreador(creadorEstaVerificado());
 
     const chat = obtenerChatActual();
 
