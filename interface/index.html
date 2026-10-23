@@ -368,7 +368,6 @@
       order: 2;
     }
 
-    /* Tarjetas para los mensajes del chat. */
     .contenido {
       min-width: 0;
       max-width: min(100%, 760px);
@@ -399,11 +398,6 @@
       box-shadow: 0 7px 20px #08071c35, inset 0 1px #ffffff0b;
     }
 
-    /*
-      Compatibilidad con las clases que utiliza static/script.js.
-      No se modifica el JavaScript: aquí se da formato a los elementos
-      .mensaje-chat y .contenido-mensaje que crea el archivo existente.
-    */
     #mensajes .mensaje-chat {
       display: flex;
       flex-direction: column;
@@ -467,21 +461,6 @@
       border-radius: 6px 18px 18px 18px;
       background: linear-gradient(145deg, #29264b, #22203f);
       color: #d8d0ff;
-    }
-
-    /* La barra lateral admite el nombre de clase usado por el script. */
-    @media (max-width: 760px) {
-      .sidebar.abierto,
-      .sidebar.abierta {
-        transform: translateX(0);
-        box-shadow: 0 0 0 100vmax #09081caa;
-      }
-
-      #mensajes .contenido-mensaje {
-        max-width: 100%;
-        padding: 13px 14px;
-        font-size: 14px;
-      }
     }
 
     .contenido img {
@@ -588,7 +567,8 @@
         overflow-y: auto;
       }
 
-      .sidebar.abierta {
+      .sidebar.abierta,
+      .sidebar.abierto {
         transform: translateX(0);
         box-shadow: 0 0 0 100vmax #09081caa;
       }
@@ -652,6 +632,12 @@
 
       .mensaje {
         gap: 9px;
+      }
+
+      #mensajes .contenido-mensaje {
+        max-width: 100%;
+        padding: 13px 14px;
+        font-size: 14px;
       }
     }
   </style>
@@ -745,19 +731,21 @@
           aria-label="Escribe tu mensaje"
         ></textarea>
 
-        <div id="archivoNombre"></div>
+        <div id="archivoNombre" hidden></div>
 
         <div class="acciones">
-          <button id="fotoBtn" type="button">▧ Foto</button>
+          <button id="fotoBtn" type="button">🖼 Galería</button>
+          <button id="camaraBtn" type="button">📷 Cámara</button>
           <button id="archivoBtn" type="button">📎 Archivo</button>
           <button id="dictarBtn" type="button">🎙 Dictar</button>
           <button id="leerBtn" type="button">🔊 Leer</button>
           <button id="compartirBtn" type="button">↗ Compartir</button>
-          <button id="borrarAdjuntoBtn" type="button">✕ Quitar archivo</button>
+          <button id="borrarAdjuntoBtn" type="button" hidden>✕ Quitar archivo</button>
           <button class="enviar" id="enviarBtn" type="button">Enviar ↑</button>
         </div>
 
         <input id="imagenInput" type="file" accept="image/*" hidden>
+        <input id="camaraInput" type="file" accept="image/*" capture="environment" hidden>
 
         <input
           id="archivoInput"
@@ -782,12 +770,12 @@
       });
     });
 
-    // Abrir y cerrar la barra lateral en celulares.
     const menuBtn = document.getElementById("menuBtn");
     const sidebar = document.getElementById("sidebar");
 
     function cerrarMenu() {
       sidebar.classList.remove("abierta");
+      sidebar.classList.remove("abierto");
       menuBtn.setAttribute("aria-expanded", "false");
       menuBtn.setAttribute("aria-label", "Abrir menú");
     }
@@ -807,7 +795,6 @@
       alternarMenu();
     });
 
-    // Cierra el menú al tocar fuera de la barra lateral.
     document.addEventListener("click", (evento) => {
       if (
         window.matchMedia("(max-width: 760px)").matches &&
@@ -819,14 +806,12 @@
       }
     });
 
-    // Permite cerrar el menú con la tecla Escape.
     document.addEventListener("keydown", (evento) => {
       if (evento.key === "Escape") {
         cerrarMenu();
       }
     });
 
-    // En pantallas grandes, mantiene la barra lateral normal.
     window.addEventListener("resize", () => {
       if (!window.matchMedia("(max-width: 760px)").matches) {
         cerrarMenu();
