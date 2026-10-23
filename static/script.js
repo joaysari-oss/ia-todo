@@ -1,824 +1,1158 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#17152f">
-  <title>IA TODO — Tu inteligencia artificial</title>
-
-  <style>
-    :root {
-      color-scheme: dark;
-      --fondo: #17152f;
-      --panel: #211e42;
-      --panel-2: #292650;
-      --borde: #403a70;
-      --texto: #f8f7ff;
-      --suave: #b9b5dc;
-      --morado: #895cff;
-      --azul: #438cff;
-      --verde: #7de8bd;
-      --degradado: linear-gradient(135deg, #9a5cff, #5578ff);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      height: 100dvh;
-      overflow: hidden;
-      display: flex;
-      color: var(--texto);
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
-      background:
-        radial-gradient(ellipse at 10% 0%, #392660 0%, transparent 36%),
-        radial-gradient(ellipse at 100% 100%, #172e60 0%, transparent 35%),
-        var(--fondo);
-    }
-
-    button, textarea {
-      font: inherit;
-    }
-
-    button {
-      cursor: pointer;
-      transition: background .2s, transform .2s, border-color .2s;
-    }
-
-    button:focus-visible, textarea:focus-visible {
-      outline: 2px solid #a58bff;
-      outline-offset: 3px;
-    }
-
-    button:disabled {
-      opacity: .65;
-      cursor: wait;
-    }
-
-    .sidebar {
-      width: 270px;
-      min-width: 270px;
-      padding: 22px 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      background: rgba(25, 22, 53, .91);
-      border-right: 1px solid #51447e;
-      backdrop-filter: blur(22px);
-      z-index: 5;
-    }
-
-    .marca {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 4px 8px 20px;
-    }
-
-    .logo-icono {
-      width: 46px;
-      height: 46px;
-      border-radius: 16px;
-      display: grid;
-      place-items: center;
-      font-size: 25px;
-      background: var(--degradado);
-      box-shadow: 0 5px 25px #805cff55;
-    }
-
-    .marca h1 {
-      font-size: 23px;
-      margin: 0;
-      letter-spacing: -.8px;
-    }
-
-    .marca h1 span {
-      color: #a993ff;
-    }
-
-    .marca small {
-      display: block;
-      margin-top: 4px;
-      color: var(--suave);
-      font-size: 11px;
-    }
-
-    .nuevo {
-      width: 100%;
-      border: 0;
-      border-radius: 14px;
-      padding: 14px 12px;
-      color: white;
-      background: var(--degradado);
-      box-shadow: 0 5px 22px #7756ed35;
-      font-weight: 700;
-      text-align: center;
-    }
-
-    .nuevo:hover, .enviar:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.1);
-    }
-
-    .etiqueta {
-      color: #aaa4d6;
-      font-size: 11px;
-      letter-spacing: 1.4px;
-      font-weight: 700;
-      padding: 13px 8px 3px;
-    }
-
-    #listaChats {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      overflow-y: auto;
-    }
-
-    .chat-item {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      min-width: 0;
-    }
-
-    .chat-item .abrir-chat {
-      flex: 1;
-      min-width: 0;
-      padding: 12px;
-      text-align: left;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      color: #d8d5f5;
-      border: 1px solid transparent;
-      background: transparent;
-      border-radius: 12px;
-    }
-
-    .chat-item .abrir-chat:hover,
-    .chat-item.activo .abrir-chat {
-      background: linear-gradient(110deg, #3a2c67, #26345e);
-      border-color: #5e4b99;
-      color: white;
-    }
-
-    .eliminar {
-      border: 0 !important;
-      color: #ff9dba !important;
-      background: transparent !important;
-      border-radius: 9px;
-      padding: 8px !important;
-    }
-
-    .eliminar:hover {
-      background: #5b294b !important;
-    }
-
-    .pie-sidebar {
-      margin-top: auto;
-      padding: 13px;
-      border: 1px solid #484071;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #2b2452, #202c50);
-    }
-
-    .pie-sidebar strong {
-      display: block;
-      font-size: 12px;
-    }
-
-    .pie-sidebar span {
-      display: block;
-      color: var(--suave);
-      font-size: 11px;
-      margin-top: 5px;
-    }
-
-    .principal {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header {
-      min-height: 72px;
-      padding: 14px 25px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      border-bottom: 1px solid #3a3565;
-      background: rgba(24, 22, 51, .48);
-      backdrop-filter: blur(15px);
-    }
-
-    .encabezado-izquierdo {
-      display: flex;
-      align-items: center;
-      gap: 13px;
-    }
-
-    .encabezado-izquierdo strong {
-      font-size: 16px;
-    }
-
-    .subtitulo {
-      color: var(--suave);
-      font-size: 11px;
-      margin-top: 4px;
-    }
-
-    .estado {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 9px 13px;
-      color: #a8f3d0;
-      background: #1e443f;
-      border: 1px solid #30675e;
-      border-radius: 30px;
-      font-size: 11px;
-    }
-
-    #mensajes {
-      flex: 1;
-      width: 100%;
-      max-width: 950px;
-      margin: 0 auto;
-      padding: 28px 24px;
-      overflow-y: auto;
-      scrollbar-color: #51428a transparent;
-    }
-
-    .bienvenida {
-      max-width: 620px;
-      margin: 9vh auto 45px;
-      text-align: center;
-    }
-
-    .bienvenida-icono {
-      width: 85px;
-      height: 85px;
-      display: grid;
-      place-items: center;
-      margin: 0 auto 25px;
-      border-radius: 28px;
-      font-size: 42px;
-      background: var(--degradado);
-      box-shadow: 0 10px 50px #805cff4d;
-      animation: flotar 4s ease-in-out infinite;
-    }
-
-    @keyframes flotar {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-7px); }
-    }
-
-    .bienvenida h2 {
-      font-size: clamp(28px, 4vw, 43px);
-      letter-spacing: -1.4px;
-      margin: 0 0 15px;
-    }
-
-    .bienvenida h2 span {
-      background: linear-gradient(100deg, #c09bff, #76aaff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-
-    .bienvenida p {
-      max-width: 460px;
-      margin: 0 auto;
-      color: var(--suave);
-      font-size: 14px;
-      line-height: 1.8;
-    }
-
-    .sugerencias {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 30px;
-      text-align: left;
-    }
-
-    .sugerencia {
-      border: 1px solid #494078;
-      border-radius: 15px;
-      padding: 15px;
-      background: linear-gradient(135deg, #29244eaa, #242c4baa);
-      color: #efedff;
-      text-align: left;
-    }
-
-    .sugerencia:hover {
-      border-color: #9274ff;
-      background: #332c60;
-      transform: translateY(-2px);
-    }
-
-    .sugerencia span {
-      display: block;
-      font-size: 21px;
-      margin-bottom: 9px;
-    }
-
-    .sugerencia strong {
-      font-size: 12px;
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    .sugerencia small {
-      font-size: 11px;
-      color: var(--suave);
-      line-height: 1.5;
-    }
-
-    .mensaje {
-      display: flex;
-      align-items: flex-start;
-      gap: 13px;
-      width: 100%;
-      margin: 22px 0;
-      line-height: 1.75;
-    }
-
-    .avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 13px;
-      flex-shrink: 0;
-      display: grid;
-      place-items: center;
-      font-size: 12px;
-      font-weight: 700;
-      color: white;
-      background: linear-gradient(135deg, #895cff, #478cff);
-      box-shadow: 0 4px 15px #7657f633;
-    }
-
-    .mensaje.usuario .avatar {
-      background: linear-gradient(135deg, #347bdc, #5162b6);
-      order: 2;
-    }
-
-    .contenido {
-      min-width: 0;
-      max-width: min(100%, 760px);
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
-      padding: 16px 18px;
-      border: 1px solid #514879;
-      border-radius: 6px 20px 20px 20px;
-      background: linear-gradient(145deg, #29264b, #22203f);
-      color: #f5f3ff;
-      box-shadow: 0 8px 24px #08071c33, inset 0 1px #ffffff08;
-      line-height: 1.8;
-    }
-
-    .mensaje:not(.usuario) .contenido {
-      border-left: 3px solid #9878ff;
-    }
-
-    .mensaje.usuario {
-      justify-content: flex-end;
-    }
-
-    .mensaje.usuario .contenido {
-      margin-left: auto;
-      background: linear-gradient(135deg, #40316f, #263f70);
-      border-color: #7160ad;
-      border-radius: 20px 6px 20px 20px;
-      box-shadow: 0 7px 20px #08071c35, inset 0 1px #ffffff0b;
-    }
-
-    #mensajes .mensaje-chat {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      width: 100%;
-      gap: 7px;
-      margin: 20px 0;
-      line-height: 1.75;
-      min-width: 0;
-    }
-
-    #mensajes .etiqueta-mensaje {
-      color: #c5b8ff;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .35px;
-      padding: 0 4px;
-    }
-
-    #mensajes .contenido-mensaje {
-      display: block;
-      width: fit-content;
-      max-width: min(100%, 760px);
-      min-width: 40px;
-      padding: 15px 18px;
-      overflow-wrap: anywhere;
-      white-space: pre-wrap;
-      word-break: break-word;
-      border: 1px solid #514879;
-      border-left: 3px solid #9878ff;
-      border-radius: 6px 20px 20px 20px;
-      background: linear-gradient(145deg, #29264b, #22203f);
-      color: #f5f3ff;
-      box-shadow: 0 8px 24px #08071c33, inset 0 1px #ffffff08;
-      line-height: 1.8;
-    }
-
-    #mensajes .mensaje-usuario {
-      align-items: flex-end;
-    }
-
-    #mensajes .mensaje-usuario .etiqueta-mensaje {
-      color: #9ec7ff;
-      text-align: right;
-    }
-
-    #mensajes .mensaje-usuario .contenido-mensaje {
-      margin-left: auto;
-      border-color: #7160ad;
-      border-radius: 20px 6px 20px 20px;
-      background: linear-gradient(135deg, #40316f, #263f70);
-      box-shadow: 0 7px 20px #08071c35, inset 0 1px #ffffff0b;
-    }
-
-    #mensajes .indicador-espera {
-      width: fit-content;
-      max-width: 100%;
-      padding: 12px 16px;
-      margin: 18px 0;
-      border: 1px solid #514879;
-      border-radius: 6px 18px 18px 18px;
-      background: linear-gradient(145deg, #29264b, #22203f);
-      color: #d8d0ff;
-    }
-
-    .contenido img {
-      display: block;
-      max-width: min(100%, 360px);
-      max-height: 320px;
-      border-radius: 13px;
-      margin-top: 10px;
-    }
-
-    .zona-escritura {
-      width: 100%;
-      padding: 15px 22px 18px;
-      border-top: 1px solid #3a3565;
-      background: linear-gradient(180deg, #19172fbb, #1e2042);
-    }
-
-    .compositor {
-      max-width: 850px;
-      margin: 0 auto;
-      padding: 14px;
-      border-radius: 21px;
-      border: 1px solid #5b4c92;
-      background: linear-gradient(135deg, #292448, #242b4e);
-      box-shadow: 0 8px 35px #0b0a2455, inset 0 1px #ffffff08;
-    }
-
-    #mensaje {
-      width: 100%;
-      min-height: 52px;
-      max-height: 180px;
-      resize: vertical;
-      padding: 10px;
-      color: white;
-      background: transparent;
-      border: 0;
-      outline: none;
-      font-size: 14px;
-    }
-
-    #mensaje::placeholder {
-      color: #aaa5cf;
-    }
-
-    #archivoNombre {
-      color: #c3b7ff;
-      font-size: 12px;
-      padding: 5px 9px;
-      overflow-wrap: anywhere;
-    }
-
-    .acciones {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      padding-top: 8px;
-    }
-
-    .acciones button {
-      padding: 9px 11px;
-      border-radius: 11px;
-      border: 1px solid #49426f;
-      background: #302d54;
-      color: #e5e1ff;
-      font-size: 12px;
-    }
-
-    .acciones button:hover {
-      border-color: #9880ff;
-      background: #41366f;
-    }
-
-    .acciones .enviar {
-      margin-left: auto;
-      min-width: 105px;
-      padding: 11px 17px;
-      color: white;
-      font-weight: 700;
-      border: 0;
-      background: linear-gradient(120deg, #9a5cff, #487cff);
-      box-shadow: 0 5px 18px #7657f644;
-    }
-
-    .nota {
-      max-width: 850px;
-      margin: 11px auto 0;
-      text-align: center;
-      color: #aaa5ce;
-      font-size: 10px;
-    }
-
-    #menuBtn {
-      display: none;
-    }
-
-    @media (max-width: 760px) {
-      .sidebar {
-        position: fixed;
-        inset: 0 auto 0 0;
-        transform: translateX(-105%);
-        transition: transform .22s ease;
-        box-shadow: none;
-        overflow-y: auto;
-      }
-
-      .sidebar.abierta,
-      .sidebar.abierto {
-        transform: translateX(0);
-        box-shadow: 0 0 0 100vmax #09081caa;
-      }
-
-      #menuBtn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 9px 11px;
-        min-width: 40px;
-        min-height: 40px;
-      }
-
-      header {
-        padding: 12px 14px;
-      }
-
-      #mensajes {
-        padding: 18px 13px;
-      }
-
-      .zona-escritura {
-        padding: 10px;
-      }
-
-      .sugerencias {
-        grid-template-columns: 1fr;
-      }
-
-      .bienvenida {
-        margin-top: 5vh;
-      }
-
-      .bienvenida h2 {
-        font-size: 29px;
-      }
-
-      .acciones {
-        gap: 6px;
-      }
-
-      .acciones button {
-        padding: 9px;
-        font-size: 11px;
-      }
-
-      .acciones .enviar {
-        min-width: 88px;
-      }
-
-      .estado {
-        padding: 7px 9px;
-        font-size: 10px;
-      }
-
-      .contenido {
-        padding: 13px 14px;
-        max-width: 100%;
-        font-size: 14px;
-      }
-
-      .mensaje {
-        gap: 9px;
-      }
-
-      #mensajes .contenido-mensaje {
-        max-width: 100%;
-        padding: 13px 14px;
-        font-size: 14px;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <aside class="sidebar" id="sidebar">
-    <div class="marca">
-      <div class="logo-icono">✦</div>
-      <div>
-        <h1>IA <span>TODO</span></h1>
-        <small>Tu universo de inteligencia</small>
-      </div>
-    </div>
-
-    <button class="nuevo" id="nuevoChat">＋ Nueva conversación</button>
-
-    <div class="etiqueta">TU HISTORIAL</div>
-    <div id="listaChats"></div>
-
-    <div class="pie-sidebar">
-      <strong>✦ IA TODO está contigo</strong>
-      <span>Ideas, respuestas y posibilidades en un solo lugar.</span>
-    </div>
-  </aside>
-
-  <main class="principal">
-    <header>
-      <div class="encabezado-izquierdo">
-        <button
-          id="menuBtn"
-          type="button"
-          aria-label="Abrir menú"
-          aria-controls="sidebar"
-          aria-expanded="false"
-        >☰</button>
-
-        <div>
-          <strong>Asistente inteligente</strong>
-          <div class="subtitulo">Un mundo de posibilidades</div>
-        </div>
-      </div>
-
-      <span class="estado" id="estado">● Lista para ayudarte</span>
-    </header>
-
-    <section id="mensajes" aria-live="polite">
-      <div class="bienvenida" id="bienvenida">
-        <div class="bienvenida-icono">✦</div>
-        <h2>Hola, bienvenido a <span>IA TODO</span></h2>
-
-        <p>
-          Tu espacio para aprender, crear, investigar y resolver tus dudas.
-          ¿Qué vamos a descubrir hoy?
-        </p>
-
-        <div class="sugerencias">
-          <button class="sugerencia" data-pregunta="Explícame un tema difícil paso a paso.">
-            <span>📚</span>
-            <strong>Aprende algo nuevo</strong>
-            <small>Entiende cualquier tema paso a paso.</small>
-          </button>
-
-          <button class="sugerencia" data-pregunta="Dame ideas creativas para un proyecto.">
-            <span>💡</span>
-            <strong>Inspírate y crea</strong>
-            <small>Encuentra ideas para tus proyectos.</small>
-          </button>
-
-          <button class="sugerencia" data-pregunta="Ayúdame a resolver una duda paso a paso.">
-            <span>💬</span>
-            <strong>Resuelve tus dudas</strong>
-            <small>Obtén explicaciones claras y sencillas.</small>
-          </button>
-
-          <button class="sugerencia" data-pregunta="Ayúdame a crear un programa o un videojuego.">
-            <span>🎮</span>
-            <strong>Construye algo increíble</strong>
-            <small>Programa, diseña y experimenta.</small>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section class="zona-escritura">
-      <div class="compositor">
-        <textarea
-          id="mensaje"
-          placeholder="Escribe aquí lo que quieras preguntarme..."
-          rows="2"
-          aria-label="Escribe tu mensaje"
-        ></textarea>
-
-        <div id="archivoNombre" hidden></div>
-
-        <div class="acciones">
-          <button id="fotoBtn" type="button">🖼 Galería</button>
-          <button id="camaraBtn" type="button">📷 Cámara</button>
-          <button id="archivoBtn" type="button">📎 Archivo</button>
-          <button id="dictarBtn" type="button">🎙 Dictar</button>
-          <button id="leerBtn" type="button">🔊 Leer</button>
-          <button id="compartirBtn" type="button">↗ Compartir</button>
-          <button id="borrarAdjuntoBtn" type="button" hidden>✕ Quitar archivo</button>
-          <button class="enviar" id="enviarBtn" type="button">Enviar ↑</button>
-        </div>
-
-        <input id="imagenInput" type="file" accept="image/*" hidden>
-        <input id="camaraInput" type="file" accept="image/*" capture="environment" hidden>
-
-        <input
-          id="archivoInput"
-          type="file"
-          accept=".txt,.md,.csv,.json,.py,.html,.css,.js"
-          hidden
-        >
-      </div>
-
-      <p class="nota">
-        IA TODO puede cometer errores. Comprueba la información importante.
-      </p>
-    </section>
-  </main>
-
-  <script>
-    document.querySelectorAll("[data-pregunta]").forEach((boton) => {
-      boton.addEventListener("click", () => {
-        const campo = document.getElementById("mensaje");
-        campo.value = boton.dataset.pregunta || "";
-        campo.focus();
-      });
+"use strict";
+
+/* =====================================================
+   IA TODO — CONFIGURACIÓN PRINCIPAL
+===================================================== */
+
+const CONFIG = Object.freeze({
+    codigoCreador: "creador_dudao_777",
+    nombreCreador: "Dudao",
+    claveHistorial: "iatodo_chats_v2",
+    idioma: "es-CO",
+    maxMensajesContexto: 20,
+    maxCaracteresArchivo: 100000,
+    maxAlturaTexto: 180,
+    maxTituloChat: 35,
+    endpointChat: "/api/chat"
+});
+
+const elementos = {
+    sidebar: document.getElementById("sidebar"),
+    menuBtn: document.getElementById("menuBtn"),
+    listaChats: document.getElementById("listaChats"),
+    mensajes: document.getElementById("mensajes"),
+    mensaje: document.getElementById("mensaje"),
+    enviarBtn: document.getElementById("enviarBtn"),
+    nuevoChatBtn: document.getElementById("nuevoChat") || document.getElementById("nuevoChatBtn"),
+    archivoInput: document.getElementById("archivoInput"),
+    fotoBtn: document.getElementById("fotoBtn"),
+    camaraBtn: document.getElementById("camaraBtn"),
+    imagenInput: document.getElementById("imagenInput"),
+    camaraInput: document.getElementById("camaraInput"),
+    archivoBtn: document.getElementById("archivoBtn"),
+    dictadoBtn: document.getElementById("dictarBtn") || document.getElementById("dictadoBtn"),
+    leerBtn: document.getElementById("leerBtn"),
+    compartirBtn: document.getElementById("compartirBtn"),
+    quitarArchivoBtn: document.getElementById("borrarAdjuntoBtn") || document.getElementById("quitarArchivoBtn"),
+    nombreArchivo: document.getElementById("archivoNombre") || document.getElementById("nombreArchivo")
+};
+
+let chats = [];
+let chatActualId = null;
+let imagenAdjunta = null;
+let archivoAdjunto = null;
+let esperandoRespuesta = false;
+let reconocimientoVoz = null;
+let leyendoRespuesta = false;
+let lecturaActual = null;
+let solicitudActual = 0;
+
+/* =====================================================
+   UTILIDADES
+===================================================== */
+
+function generarId() {
+    return (
+        Date.now().toString(36) +
+        Math.random().toString(36).slice(2, 10)
+    );
+}
+
+function obtenerChatActual() {
+    return chats.find(chat => chat.id === chatActualId) || null;
+}
+
+function guardarChats() {
+    try {
+        localStorage.setItem(
+            CONFIG.claveHistorial,
+            JSON.stringify(chats)
+        );
+    } catch (error) {
+        console.error("Error al guardar las conversaciones:", error);
+    }
+}
+
+function cargarChats() {
+    try {
+        const guardados = localStorage.getItem(CONFIG.claveHistorial);
+        const datos = guardados ? JSON.parse(guardados) : [];
+
+        chats = Array.isArray(datos)
+            ? datos.filter(chat =>
+                chat &&
+                typeof chat.id === "string" &&
+                Array.isArray(chat.mensajes)
+            )
+            : [];
+    } catch (error) {
+        console.error("Error al cargar las conversaciones:", error);
+        chats = [];
+    }
+
+    if (chats.length > 0) {
+        chatActualId = chats[0].id;
+    } else {
+        crearChatInterno();
+    }
+}
+
+function crearChatInterno() {
+    const chat = {
+        id: generarId(),
+        titulo: "Nueva conversación",
+        mensajes: [],
+        fecha: Date.now()
+    };
+
+    chats.unshift(chat);
+    chatActualId = chat.id;
+    guardarChats();
+
+    return chat;
+}
+
+function escaparHTML(texto) {
+    return String(texto ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+function cerrarSidebarEnMovil() {
+    if (!elementos.sidebar) return;
+
+    elementos.sidebar.classList.remove("abierta");
+    elementos.sidebar.classList.remove("abierto");
+}
+
+function desplazarAlFinal() {
+    if (!elementos.mensajes) return;
+
+    elementos.mensajes.scrollTop =
+        elementos.mensajes.scrollHeight;
+}
+
+function obtenerUltimaRespuesta(chat = obtenerChatActual()) {
+    if (!chat || !Array.isArray(chat.mensajes)) return null;
+
+    return [...chat.mensajes]
+        .reverse()
+        .find(mensaje =>
+            mensaje &&
+            mensaje.rol === "asistente" &&
+            typeof mensaje.texto === "string" &&
+            mensaje.texto.trim()
+        ) || null;
+}
+
+/* =====================================================
+   BIENVENIDA
+===================================================== */
+
+function mostrarBienvenida() {
+    if (!elementos.mensajes) return;
+
+    detenerLectura();
+    elementos.mensajes.replaceChildren();
+
+    const bienvenida = document.createElement("div");
+    bienvenida.className = "bienvenida";
+
+    const icono = document.createElement("div");
+    icono.className = "bienvenida-icono";
+    icono.textContent = "✦";
+
+    const titulo = document.createElement("h2");
+    titulo.textContent = "¡Hola! Soy IA TODO";
+
+    const descripcion = document.createElement("p");
+    descripcion.textContent =
+        "Tu inteligencia artificial multipropósito. Pregúntame lo que quieras.";
+
+    const sugerencias = document.createElement("div");
+    sugerencias.className = "sugerencias";
+
+    const opciones = [
+        {
+            icono: "📚",
+            titulo: "Aprender algo",
+            descripcion: "Explicaciones fáciles",
+            pregunta: "Explícame un tema difícil paso a paso"
+        },
+        {
+            icono: "🎮",
+            titulo: "Crear un videojuego",
+            descripcion: "Ideas y programación",
+            pregunta: "Ayúdame a crear un videojuego"
+        },
+        {
+            icono: "💡",
+            titulo: "Crear una idea",
+            descripcion: "Proyectos y negocios",
+            pregunta: "Dame una idea de negocio original"
+        },
+        {
+            icono: "🧠",
+            titulo: "Resolver un problema",
+            descripcion: "Razonamiento paso a paso",
+            pregunta: "Ayúdame a resolver un problema paso a paso"
+        }
+    ];
+
+    opciones.forEach(opcion => {
+        const tarjeta = document.createElement("button");
+        tarjeta.type = "button";
+        tarjeta.className = "sugerencia";
+        tarjeta.dataset.pregunta = opcion.pregunta;
+
+        const iconoTarjeta = document.createElement("span");
+        iconoTarjeta.textContent = opcion.icono;
+
+        const tituloTarjeta = document.createElement("strong");
+        tituloTarjeta.textContent = opcion.titulo;
+
+        const descripcionTarjeta = document.createElement("small");
+        descripcionTarjeta.textContent = opcion.descripcion;
+
+        tarjeta.append(
+            iconoTarjeta,
+            tituloTarjeta,
+            descripcionTarjeta
+        );
+
+        sugerencias.appendChild(tarjeta);
     });
 
-    const menuBtn = document.getElementById("menuBtn");
-    const sidebar = document.getElementById("sidebar");
+    bienvenida.append(
+        icono,
+        titulo,
+        descripcion,
+        sugerencias
+    );
 
-    function cerrarMenu() {
-      sidebar.classList.remove("abierta");
-      sidebar.classList.remove("abierto");
-      menuBtn.setAttribute("aria-expanded", "false");
-      menuBtn.setAttribute("aria-label", "Abrir menú");
+    elementos.mensajes.appendChild(bienvenida);
+}
+
+/* =====================================================
+   MOSTRAR MENSAJES
+===================================================== */
+
+function agregarMensajeVisual(rol, texto, opciones = {}) {
+    if (!elementos.mensajes) return null;
+
+    const esUsuario = rol === "usuario";
+    const contenedor = document.createElement("div");
+
+    contenedor.className = esUsuario
+        ? "mensaje-chat mensaje-usuario"
+        : "mensaje-chat mensaje-asistente";
+
+    const etiqueta = document.createElement("div");
+    etiqueta.className = "etiqueta-mensaje";
+    etiqueta.textContent = esUsuario ? "Tú" : "IA TODO";
+
+    const contenido = document.createElement("div");
+    contenido.className = "contenido-mensaje";
+    contenido.textContent = String(texto ?? "");
+
+    contenedor.append(etiqueta, contenido);
+
+    if (opciones.imagen) {
+        const imagen = document.createElement("img");
+
+        imagen.src = opciones.imagen;
+        imagen.alt = "Imagen adjunta";
+        imagen.className = "imagen-mensaje";
+        imagen.style.maxWidth = "100%";
+        imagen.style.maxHeight = "300px";
+        imagen.style.objectFit = "contain";
+        imagen.style.borderRadius = "12px";
+        imagen.style.marginTop = "10px";
+
+        contenido.appendChild(document.createElement("br"));
+        contenido.appendChild(imagen);
     }
 
-    function alternarMenu() {
-      const abierta = sidebar.classList.toggle("abierta");
+    elementos.mensajes.appendChild(contenedor);
+    desplazarAlFinal();
 
-      menuBtn.setAttribute("aria-expanded", String(abierta));
-      menuBtn.setAttribute(
-        "aria-label",
-        abierta ? "Cerrar menú" : "Abrir menú"
-      );
+    return contenedor;
+}
+
+function mostrarIndicadorEspera() {
+    quitarIndicadorEspera();
+
+    if (!elementos.mensajes) return;
+
+    const indicador = document.createElement("div");
+
+    indicador.className = "indicador-espera";
+    indicador.id = "indicadorEspera";
+    indicador.textContent = "IA TODO está pensando…";
+    indicador.setAttribute("role", "status");
+    indicador.setAttribute("aria-live", "polite");
+
+    elementos.mensajes.appendChild(indicador);
+    desplazarAlFinal();
+}
+
+function quitarIndicadorEspera() {
+    document.getElementById("indicadorEspera")?.remove();
+}
+
+/* =====================================================
+   HISTORIAL
+===================================================== */
+
+function actualizarInterfazHistorial() {
+    if (!elementos.listaChats) return;
+
+    elementos.listaChats.replaceChildren();
+
+    if (chats.length === 0) {
+        const vacio = document.createElement("div");
+        vacio.className = "historial-vacio";
+        vacio.textContent = "Todavía no tienes conversaciones.";
+
+        elementos.listaChats.appendChild(vacio);
+        return;
     }
 
-    menuBtn.addEventListener("click", (evento) => {
-      evento.stopPropagation();
-      alternarMenu();
+    chats.forEach(chat => {
+        const fila = document.createElement("div");
+        fila.className = "chat-item";
+
+        if (chat.id === chatActualId) {
+            fila.classList.add("activo");
+        }
+
+        const abrir = document.createElement("button");
+        abrir.type = "button";
+        abrir.className = "abrir-chat";
+        abrir.textContent = chat.titulo || "Nueva conversación";
+        abrir.title = chat.titulo || "Nueva conversación";
+
+        abrir.addEventListener("click", () => abrirChat(chat.id));
+
+        const borrar = document.createElement("button");
+        borrar.type = "button";
+        borrar.className = "eliminar";
+        borrar.textContent = "×";
+        borrar.title = "Eliminar conversación";
+        borrar.setAttribute("aria-label", "Eliminar conversación");
+
+        borrar.addEventListener("click", evento => {
+            evento.stopPropagation();
+            eliminarChat(chat.id);
+        });
+
+        fila.append(abrir, borrar);
+        elementos.listaChats.appendChild(fila);
+    });
+}
+
+function actualizarTituloChat(chat) {
+    if (!chat) return;
+
+    const primero = chat.mensajes.find(
+        mensaje => mensaje.rol === "usuario"
+    );
+
+    if (!primero || !primero.texto) {
+        chat.titulo = "Nueva conversación";
+        return;
+    }
+
+    const titulo = primero.texto.trim();
+
+    chat.titulo = titulo.length > CONFIG.maxTituloChat
+        ? titulo.slice(0, CONFIG.maxTituloChat) + "…"
+        : titulo;
+}
+
+function nuevaConversacion() {
+    detenerLectura();
+    detenerDictado();
+
+    crearChatInterno();
+    actualizarInterfazHistorial();
+    mostrarBienvenida();
+    limpiarAdjunto();
+    cerrarSidebarEnMovil();
+
+    if (elementos.mensaje) {
+        elementos.mensaje.value = "";
+        ajustarAlturaTexto();
+        elementos.mensaje.focus();
+    }
+}
+
+function abrirChat(id) {
+    const chat = chats.find(item => item.id === id);
+
+    if (!chat) return;
+
+    detenerLectura();
+    detenerDictado();
+
+    chatActualId = id;
+
+    actualizarInterfazHistorial();
+    renderizarChat(chat);
+    cerrarSidebarEnMovil();
+}
+
+function renderizarChat(chat) {
+    if (!elementos.mensajes) return;
+
+    detenerLectura();
+    elementos.mensajes.replaceChildren();
+
+    if (!chat || !chat.mensajes.length) {
+        mostrarBienvenida();
+        return;
+    }
+
+    chat.mensajes.forEach(mensaje => {
+        agregarMensajeVisual(
+            mensaje.rol,
+            mensaje.texto,
+            { imagen: mensaje.imagen || null }
+        );
     });
 
-    document.addEventListener("click", (evento) => {
-      if (
-        window.matchMedia("(max-width: 760px)").matches &&
-        sidebar.classList.contains("abierta") &&
-        !sidebar.contains(evento.target) &&
-        !menuBtn.contains(evento.target)
-      ) {
-        cerrarMenu();
-      }
+    desplazarAlFinal();
+}
+
+function eliminarChat(id) {
+    if (!window.confirm("¿Seguro que quieres eliminar esta conversación?")) {
+        return;
+    }
+
+    if (id === chatActualId) {
+        detenerLectura();
+    }
+
+    chats = chats.filter(chat => chat.id !== id);
+
+    if (chatActualId === id) {
+        if (chats.length > 0) {
+            chatActualId = chats[0].id;
+        } else {
+            crearChatInterno();
+        }
+
+        renderizarChat(obtenerChatActual());
+    }
+
+    guardarChats();
+    actualizarInterfazHistorial();
+}
+
+/* =====================================================
+   IDENTIDAD DEL CREADOR
+===================================================== */
+
+function esPreguntaSobreCreador(texto) {
+    const pregunta = String(texto || "")
+        .toLocaleLowerCase("es-CO")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    const patrones = [
+        /quien te creo/,
+        /quien es tu creador/,
+        /quien te hizo/,
+        /quien te programo/,
+        /quien te desarrollo/,
+        /quien te construyo/,
+        /quien creo ia todo/,
+        /quien hizo ia todo/,
+        /quien es el creador/,
+        /quien te invento/,
+        /quien creo esta inteligencia artificial/
+    ];
+
+    return patrones.some(patron => patron.test(pregunta));
+}
+
+function respuestaCreador() {
+    return "IA TODO fue creada por Dudao, un niño. No puede dar más información sobre su creador";
+}
+
+/* =====================================================
+   CONEXIÓN CON EL SERVIDOR DE IA
+===================================================== */
+
+async function enviarMensaje() {
+    if (esperandoRespuesta || !elementos.mensaje) return;
+
+    const texto = elementos.mensaje.value.trim();
+
+    if (!texto && !imagenAdjunta && !archivoAdjunto) return;
+
+    const chat = obtenerChatActual();
+
+    if (!chat) return;
+
+    const solicitud = ++solicitudActual;
+    const imagen = imagenAdjunta;
+    const archivo = archivoAdjunto;
+
+    const textoVisible = texto ||
+        (imagen ? "Analiza esta imagen." : "Analiza este archivo.");
+
+    chat.mensajes.push({
+        rol: "usuario",
+        texto: textoVisible,
+        fecha: Date.now(),
+        imagen: imagen || null
     });
 
-    document.addEventListener("keydown", (evento) => {
-      if (evento.key === "Escape") {
-        cerrarMenu();
-      }
+    actualizarTituloChat(chat);
+
+    agregarMensajeVisual("usuario", textoVisible, { imagen });
+
+    elementos.mensaje.value = "";
+    ajustarAlturaTexto();
+    limpiarAdjunto();
+
+    guardarChats();
+    actualizarInterfazHistorial();
+
+    esperandoRespuesta = true;
+    cambiarEstadoEnviar(true);
+    mostrarIndicadorEspera();
+
+    try {
+        let respuesta;
+
+        if (esPreguntaSobreCreador(texto)) {
+            respuesta = respuestaCreador();
+        } else {
+            const historial = chat.mensajes
+                .slice(-CONFIG.maxMensajesContexto)
+                .map(mensaje => ({
+                    rol: mensaje.rol,
+                    texto: mensaje.texto
+                }));
+
+            const cuerpo = {
+                mensaje: texto,
+                historial,
+                imagen: imagen || null
+            };
+
+            if (archivo) {
+                cuerpo.archivo = archivo;
+            }
+
+            const resultado = await fetch(CONFIG.endpointChat, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(cuerpo)
+            });
+
+            let datos;
+
+            try {
+                datos = await resultado.json();
+            } catch {
+                throw new Error(
+                    "El servidor devolvió una respuesta que no es JSON."
+                );
+            }
+
+            if (!resultado.ok) {
+                throw new Error(
+                    datos.error ||
+                    datos.mensaje ||
+                    `Error del servidor: ${resultado.status}`
+                );
+            }
+
+            respuesta =
+                datos.texto ??
+                datos.respuesta ??
+                datos.message ??
+                datos.mensaje;
+
+            if (typeof respuesta !== "string" || !respuesta.trim()) {
+                throw new Error("El servidor no devolvió una respuesta válida.");
+            }
+        }
+
+        if (solicitud !== solicitudActual) return;
+
+        quitarIndicadorEspera();
+
+        chat.mensajes.push({
+            rol: "asistente",
+            texto: respuesta,
+            fecha: Date.now()
+        });
+
+        if (obtenerChatActual()?.id === chat.id) {
+            agregarMensajeVisual("asistente", respuesta);
+        }
+
+        actualizarTituloChat(chat);
+        guardarChats();
+        actualizarInterfazHistorial();
+
+    } catch (error) {
+        console.error("Error al consultar IA TODO:", error);
+
+        if (solicitud === solicitudActual) {
+            quitarIndicadorEspera();
+
+            agregarMensajeVisual(
+                "asistente",
+                "No pude obtener una respuesta. Revisa tu conexión e inténtalo de nuevo."
+            );
+        }
+    } finally {
+        if (solicitud === solicitudActual) {
+            esperandoRespuesta = false;
+            cambiarEstadoEnviar(false);
+            elementos.mensaje?.focus();
+        }
+    }
+}
+
+function cambiarEstadoEnviar(ocupado) {
+    if (!elementos.enviarBtn) return;
+
+    elementos.enviarBtn.disabled = ocupado;
+    elementos.enviarBtn.setAttribute(
+        "aria-busy",
+        ocupado ? "true" : "false"
+    );
+}
+
+/* =====================================================
+   ARCHIVOS E IMÁGENES
+===================================================== */
+
+function procesarArchivo(archivo) {
+    if (!archivo) return;
+
+    const esImagen = archivo.type.startsWith("image/");
+
+    if (esImagen) {
+        const lector = new FileReader();
+
+        lector.onload = evento => {
+            imagenAdjunta = evento.target.result;
+            archivoAdjunto = null;
+            mostrarNombreAdjunto(archivo.name);
+        };
+
+        lector.onerror = () => {
+            alert("No se pudo leer la imagen.");
+        };
+
+        lector.readAsDataURL(archivo);
+        return;
+    }
+
+    const lector = new FileReader();
+
+    lector.onload = evento => {
+        archivoAdjunto = {
+            nombre: archivo.name,
+            tipo: archivo.type || "application/octet-stream",
+            contenido: String(evento.target.result || "")
+                .slice(0, CONFIG.maxCaracteresArchivo)
+        };
+
+        imagenAdjunta = null;
+        mostrarNombreAdjunto(archivo.name);
+    };
+
+    lector.onerror = () => {
+        alert("No se pudo leer el archivo.");
+    };
+
+    lector.readAsText(archivo);
+}
+
+function mostrarNombreAdjunto(nombre) {
+    if (elementos.nombreArchivo) {
+        elementos.nombreArchivo.textContent = nombre;
+        elementos.nombreArchivo.hidden = false;
+    }
+
+    if (elementos.quitarArchivoBtn) {
+        elementos.quitarArchivoBtn.hidden = false;
+    }
+}
+
+function limpiarAdjunto() {
+    imagenAdjunta = null;
+    archivoAdjunto = null;
+
+    if (elementos.archivoInput) {
+        elementos.archivoInput.value = "";
+    }
+
+    if (elementos.imagenInput) {
+        elementos.imagenInput.value = "";
+    }
+
+    if (elementos.camaraInput) {
+        elementos.camaraInput.value = "";
+    }
+
+    if (elementos.nombreArchivo) {
+        elementos.nombreArchivo.textContent = "";
+        elementos.nombreArchivo.hidden = true;
+    }
+
+    if (elementos.quitarArchivoBtn) {
+        elementos.quitarArchivoBtn.hidden = true;
+    }
+}
+
+/* =====================================================
+   DICTADO POR VOZ
+===================================================== */
+
+function iniciarDictado() {
+    const Reconocimiento =
+        window.SpeechRecognition ||
+        window.webkitSpeechRecognition;
+
+    if (!Reconocimiento) {
+        alert(
+            "Tu navegador no admite dictado por voz. Prueba con Google Chrome."
+        );
+        return;
+    }
+
+    if (reconocimientoVoz) {
+        detenerDictado();
+        return;
+    }
+
+    reconocimientoVoz = new Reconocimiento();
+    reconocimientoVoz.lang = CONFIG.idioma;
+    reconocimientoVoz.continuous = false;
+    reconocimientoVoz.interimResults = false;
+
+    actualizarBotonDictado(true);
+
+    reconocimientoVoz.onresult = evento => {
+        const resultado = evento.results?.[0]?.[0]?.transcript;
+
+        if (resultado && elementos.mensaje) {
+            elementos.mensaje.value = (
+                elementos.mensaje.value + " " + resultado
+            ).trim();
+
+            ajustarAlturaTexto();
+            elementos.mensaje.focus();
+        }
+    };
+
+    reconocimientoVoz.onerror = evento => {
+        console.error("Error de dictado:", evento.error);
+
+        if (evento.error === "not-allowed") {
+            alert("Permite el acceso al micrófono en tu navegador para usar el dictado.");
+        }
+    };
+
+    reconocimientoVoz.onend = () => {
+        reconocimientoVoz = null;
+        actualizarBotonDictado(false);
+    };
+
+    try {
+        reconocimientoVoz.start();
+    } catch (error) {
+        console.error("No se pudo iniciar el dictado:", error);
+        detenerDictado();
+    }
+}
+
+function actualizarBotonDictado(activo) {
+    if (!elementos.dictadoBtn) return;
+
+    elementos.dictadoBtn.classList.toggle("escuchando", activo);
+    elementos.dictadoBtn.setAttribute(
+        "aria-pressed",
+        activo ? "true" : "false"
+    );
+    elementos.dictadoBtn.title = activo
+        ? "Detener dictado"
+        : "Dictar por voz";
+}
+
+function detenerDictado() {
+    const reconocimiento = reconocimientoVoz;
+    reconocimientoVoz = null;
+
+    if (reconocimiento) {
+        try {
+            reconocimiento.stop();
+        } catch (error) {
+            console.warn("No se pudo detener el dictado:", error);
+        }
+    }
+
+    actualizarBotonDictado(false);
+}
+
+/* =====================================================
+   LECTURA EN VOZ ALTA
+   El botón funciona como interruptor: leer / detener.
+===================================================== */
+
+function actualizarBotonLectura(activo) {
+    if (!elementos.leerBtn) return;
+
+    elementos.leerBtn.classList.toggle("leyendo", activo);
+    elementos.leerBtn.setAttribute(
+        "aria-pressed",
+        activo ? "true" : "false"
+    );
+    elementos.leerBtn.title = activo
+        ? "Detener lectura"
+        : "Leer respuesta";
+}
+
+function leerUltimaRespuesta() {
+    if (!("speechSynthesis" in window)) {
+        alert("Tu navegador no admite lectura en voz alta.");
+        return;
+    }
+
+    if (
+        leyendoRespuesta ||
+        window.speechSynthesis.speaking ||
+        window.speechSynthesis.pending
+    ) {
+        detenerLectura();
+        return;
+    }
+
+    const ultimaRespuesta = obtenerUltimaRespuesta();
+
+    if (!ultimaRespuesta) {
+        alert("Todavía no hay una respuesta para leer.");
+        return;
+    }
+
+    detenerLectura();
+
+    const texto = ultimaRespuesta.texto.trim();
+
+    if (!texto) {
+        alert("La respuesta no contiene texto para leer.");
+        return;
+    }
+
+    const voz = new SpeechSynthesisUtterance(texto);
+
+    voz.lang = CONFIG.idioma;
+    voz.rate = 1;
+    voz.pitch = 1;
+    voz.volume = 1;
+
+    lecturaActual = voz;
+    leyendoRespuesta = true;
+    actualizarBotonLectura(true);
+
+    voz.onstart = () => {
+        leyendoRespuesta = true;
+        actualizarBotonLectura(true);
+    };
+
+    voz.onend = () => {
+        finalizarLectura(voz);
+    };
+
+    voz.onerror = evento => {
+        if (
+            evento.error !== "canceled" &&
+            evento.error !== "interrupted"
+        ) {
+            console.error("Error de lectura:", evento.error);
+        }
+
+        finalizarLectura(voz);
+    };
+
+    try {
+        window.speechSynthesis.speak(voz);
+    } catch (error) {
+        console.error("No se pudo iniciar la lectura:", error);
+        finalizarLectura(voz);
+    }
+}
+
+function finalizarLectura(voz) {
+    if (voz && lecturaActual !== voz) return;
+
+    lecturaActual = null;
+    leyendoRespuesta = false;
+    actualizarBotonLectura(false);
+}
+
+function detenerLectura() {
+    leyendoRespuesta = false;
+
+    if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+    }
+
+    lecturaActual = null;
+    actualizarBotonLectura(false);
+}
+
+/* =====================================================
+   COMPARTIR CONVERSACIONES
+===================================================== */
+
+async function compartirConversacion() {
+    const chat = obtenerChatActual();
+
+    if (!chat || chat.mensajes.length === 0) {
+        alert("No hay una conversación para compartir.");
+        return;
+    }
+
+    const contenido = chat.mensajes
+        .map(mensaje => {
+            const autor = mensaje.rol === "usuario"
+                ? "Tú"
+                : "IA TODO";
+
+            return `${autor}:\n${mensaje.texto}`;
+        })
+        .join("\n\n");
+
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: chat.titulo || "Conversación con IA TODO",
+                text: contenido
+            });
+            return;
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(contenido);
+            alert("La conversación se copió al portapapeles.");
+            return;
+        }
+
+        const area = document.createElement("textarea");
+        area.value = contenido;
+        area.setAttribute("readonly", "");
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+
+        document.body.appendChild(area);
+        area.select();
+
+        const copiado = document.execCommand("copy");
+        area.remove();
+
+        alert(
+            copiado
+                ? "La conversación se copió al portapapeles."
+                : "No se pudo copiar la conversación."
+        );
+    } catch (error) {
+        if (error.name !== "AbortError") {
+            console.error("Error al compartir:", error);
+            alert("No se pudo compartir la conversación.");
+        }
+    }
+}
+
+/* =====================================================
+   CUADRO DE TEXTO
+===================================================== */
+
+function ajustarAlturaTexto() {
+    if (!elementos.mensaje) return;
+
+    elementos.mensaje.style.height = "auto";
+
+    elementos.mensaje.style.height =
+        Math.min(
+            elementos.mensaje.scrollHeight,
+            CONFIG.maxAlturaTexto
+        ) + "px";
+}
+
+/* =====================================================
+   EVENTOS DE LA INTERFAZ
+===================================================== */
+
+function conectarEventos() {
+    elementos.enviarBtn?.addEventListener(
+        "click",
+        enviarMensaje
+    );
+
+    elementos.mensaje?.addEventListener("keydown", evento => {
+        if (
+            evento.key === "Enter" &&
+            !evento.shiftKey &&
+            !evento.isComposing
+        ) {
+            evento.preventDefault();
+            enviarMensaje();
+        }
+    });
+
+    elementos.mensaje?.addEventListener(
+        "input",
+        ajustarAlturaTexto
+    );
+
+    elementos.nuevoChatBtn?.addEventListener(
+        "click",
+        nuevaConversacion
+    );
+
+    // Galería: seleccionar una foto guardada.
+    elementos.fotoBtn?.addEventListener("click", () => {
+        elementos.imagenInput?.click();
+    });
+
+    // Cámara: tomar una fotografía desde un dispositivo compatible.
+    elementos.camaraBtn?.addEventListener("click", () => {
+        elementos.camaraInput?.click();
+    });
+
+    elementos.imagenInput?.addEventListener("change", evento => {
+        const archivo = evento.target.files?.[0];
+
+        if (archivo) {
+            procesarArchivo(archivo);
+        }
+
+        evento.target.value = "";
+    });
+
+    elementos.camaraInput?.addEventListener("change", evento => {
+        const archivo = evento.target.files?.[0];
+
+        if (archivo) {
+            procesarArchivo(archivo);
+        }
+
+        evento.target.value = "";
+    });
+
+    if (elementos.archivoBtn && elementos.archivoInput) {
+        elementos.archivoBtn.addEventListener("click", () => {
+            elementos.archivoInput.accept =
+                ".txt,.md,.csv,.json,.py,.html,.css,.js,.pdf,.doc,.docx,.xlsx";
+
+            elementos.archivoInput.click();
+        });
+    }
+
+    elementos.archivoInput?.addEventListener("change", evento => {
+        const archivo = evento.target.files?.[0];
+
+        if (archivo) {
+            procesarArchivo(archivo);
+        }
+    });
+
+    elementos.quitarArchivoBtn?.addEventListener(
+        "click",
+        limpiarAdjunto
+    );
+
+    elementos.dictadoBtn?.addEventListener(
+        "click",
+        iniciarDictado
+    );
+
+    elementos.leerBtn?.addEventListener(
+        "click",
+        leerUltimaRespuesta
+    );
+
+    elementos.compartirBtn?.addEventListener(
+        "click",
+        compartirConversacion
+    );
+
+    elementos.mensajes?.addEventListener("click", evento => {
+        const tarjeta = evento.target.closest("[data-pregunta]");
+
+        if (!tarjeta) return;
+
+        const pregunta = tarjeta.getAttribute("data-pregunta");
+
+        if (pregunta && elementos.mensaje) {
+            elementos.mensaje.value = pregunta;
+            ajustarAlturaTexto();
+            elementos.mensaje.focus();
+        }
+    });
+
+    document.addEventListener("keydown", evento => {
+        if (evento.key === "Escape") {
+            cerrarSidebarEnMovil();
+            detenerLectura();
+        }
     });
 
     window.addEventListener("resize", () => {
-      if (!window.matchMedia("(max-width: 760px)").matches) {
-        cerrarMenu();
-      }
+        if (window.innerWidth > 760) {
+            cerrarSidebarEnMovil();
+        }
     });
-  </script>
 
-  <script src="/static/script.js"></script>
-</body>
-</html>
+    window.addEventListener("beforeunload", () => {
+        detenerLectura();
+        detenerDictado();
+    });
+}
+
+/* =====================================================
+   INICIALIZACIÓN
+===================================================== */
+
+function iniciarIA() {
+    cargarChats();
+    conectarEventos();
+    actualizarInterfazHistorial();
+
+    const chat = obtenerChatActual();
+
+    if (chat && chat.mensajes.length > 0) {
+        renderizarChat(chat);
+    } else {
+        mostrarBienvenida();
+    }
+
+    ajustarAlturaTexto();
+    actualizarBotonLectura(false);
+    actualizarBotonDictado(false);
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener(
+        "DOMContentLoaded",
+        iniciarIA,
+        { once: true }
+    );
+} else {
+    iniciarIA();
+}
