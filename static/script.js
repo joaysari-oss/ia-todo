@@ -5,8 +5,8 @@
 ===================================================== */
 
 const CONFIG = Object.freeze({
-    codigoCreador: "creador_dudao_777",
-    nombreCreador: "Dudao",
+    codigoCreador: "creador_joao_777",
+    nombreCreador: "Joao",
     claveHistorial: "iatodo_chats_v2",
     idioma: "es-CO",
     maxMensajesContexto: 20,
